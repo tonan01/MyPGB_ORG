@@ -1,0 +1,6 @@
+@PGB.ApiGateway_HostAddress = http://localhost:5130
+
+GET {{PGB.ApiGateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
