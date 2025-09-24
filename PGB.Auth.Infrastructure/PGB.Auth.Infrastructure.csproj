@@ -6,4 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PGB.Auth.Application\PGB.Auth.Application.csproj" />
+    <ProjectReference Include="..\PGB.Auth.Domain\PGB.Auth.Domain.csproj" />
+    <ProjectReference Include="..\PGB.BuildingBlocks.Infrastructure\PGB.BuildingBlocks.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

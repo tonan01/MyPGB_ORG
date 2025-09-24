@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PGB.BuildingBlocks.Application\PGB.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\PGB.Chat.Domain\PGB.Chat.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -18,4 +18,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PGB.Chat.Application\PGB.Chat.Application.csproj" />
+    <ProjectReference Include="..\PGB.Chat.Infrastructure\PGB.Chat.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
