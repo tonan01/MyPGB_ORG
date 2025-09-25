@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PGB.BuildingBlocks.Infrastructure\PGB.BuildingBlocks.Infrastructure.csproj" />
     <ProjectReference Include="..\PGB.Chat.Application\PGB.Chat.Application.csproj" />
     <ProjectReference Include="..\PGB.Chat.Domain\PGB.Chat.Domain.csproj" />
