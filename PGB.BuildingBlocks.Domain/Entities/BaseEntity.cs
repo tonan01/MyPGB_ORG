@@ -1,4 +1,5 @@
 ﻿using PGB.BuildingBlocks.Domain.Events;
+using PGB.BuildingBlocks.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +8,9 @@ using System.Threading.Tasks;
 
 namespace PGB.BuildingBlocks.Domain.Entities
 {
-    public abstract class BaseEntity<TId> : IEquatable<BaseEntity<TId>>
+    public abstract class BaseEntity<TId> : IEquatable<BaseEntity<TId>>, IAuditable, ISoftDelete
     {
+        #region Properties
         public TId Id { get; protected set; } = default!;
         public DateTime CreatedAt { get; protected set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; protected set; }
@@ -17,45 +19,41 @@ namespace PGB.BuildingBlocks.Domain.Entities
         public bool IsDeleted { get; protected set; } = false;
         public DateTime? DeletedAt { get; protected set; }
         public string? DeletedBy { get; protected set; }
+        #endregion
 
-        private List<IDomainEvent> _domainEvents = new();
-        public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
-
+        #region Constructors
         protected BaseEntity() { }
 
         protected BaseEntity(TId id)
         {
             Id = id;
         }
+        #endregion
 
-        public void MarkAsUpdated(string updatedBy)
+        #region Audit Methods
+        public virtual void MarkAsUpdated(string updatedBy)
         {
             UpdatedAt = DateTime.UtcNow;
             UpdatedBy = updatedBy;
         }
 
-        public void MarkAsDeleted(string deletedBy)
+        public virtual void MarkAsDeleted(string deletedBy)
         {
             IsDeleted = true;
             DeletedAt = DateTime.UtcNow;
             DeletedBy = deletedBy;
         }
 
-        public void AddDomainEvent(IDomainEvent domainEvent)
+        public virtual void Restore(string restoredBy)
         {
-            _domainEvents.Add(domainEvent);
+            IsDeleted = false;
+            DeletedAt = null;
+            DeletedBy = null;
+            MarkAsUpdated(restoredBy);
         }
+        #endregion
 
-        public void RemoveDomainEvent(IDomainEvent domainEvent)
-        {
-            _domainEvents.Remove(domainEvent);
-        }
-
-        public void ClearDomainEvents()
-        {
-            _domainEvents.Clear();
-        }
-
+        #region Equality
         public bool Equals(BaseEntity<TId>? other)
         {
             if (other is null) return false;
@@ -82,12 +80,18 @@ namespace PGB.BuildingBlocks.Domain.Entities
         {
             return !Equals(left, right);
         }
+        #endregion
     }
 
-    // Convenience class for Guid-based entities
+    #region Convenience Classes
+    /// <summary>
+    /// Default ID Guid
+    /// Auto generate UUID => Create new 
+    /// </summary>
     public abstract class BaseEntity : BaseEntity<Guid>
     {
         protected BaseEntity() : base(Guid.NewGuid()) { }
         protected BaseEntity(Guid id) : base(id) { }
     }
+    #endregion
 }

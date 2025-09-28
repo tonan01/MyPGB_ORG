@@ -7,18 +7,33 @@ using System.Threading.Tasks;
 
 namespace PGB.Auth.Domain.Events
 {
-    public class UserLoggedInEvent : IDomainEvent
+    /// <summary>
+    /// Event => user registered successfully
+    /// trigger: update last login, log audit, security checks
+    /// </summary>
+    public class UserLoggedInEvent : DomainEvent
     {
-        public Guid EventId { get; } = Guid.NewGuid();
-        public DateTime OccurredAt { get; } = DateTime.UtcNow;
-
+        #region Properties
         public Guid UserId { get; }
         public string Username { get; }
+        /// <summary>
+        /// IP address for security monitoring
+        /// </summary>
+        public string? IpAddress { get; }
+        /// <summary>
+        /// User agent for device tracking
+        /// </summary>
+        public string? UserAgent { get; }
+        #endregion
 
-        public UserLoggedInEvent(Guid userId, string username)
+        #region Constructors
+        public UserLoggedInEvent(Guid userId, string username, string? ipAddress = null, string? userAgent = null)
         {
             UserId = userId;
             Username = username;
-        }
+            IpAddress = ipAddress;
+            UserAgent = userAgent;
+        } 
+        #endregion
     }
 }

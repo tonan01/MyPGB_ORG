@@ -8,28 +8,25 @@ using System.Threading.Tasks;
 namespace PGB.Auth.Domain.Events
 {
     /// <summary>
-    /// Domain event => user registered successfully
-    /// effects: welcome email, setup default settings, etc.
+    /// Event ==> user deactivated (soft delete)
+    /// Trigger: revoke tokens, notify other services, cleanup sessions
     /// </summary>
-    public class UserRegisteredEvent : DomainEvent
+    public class UserDeactivatedEvent : DomainEvent
     {
         #region Properties
         public Guid UserId { get; }
-        /// <summary>
-        /// Username to personalize welcome message
-        /// </summary>
         public string Username { get; }
-        public string Email { get; }
-        public string FullName { get; }
+        public string Reason { get; }
+        public string DeactivatedBy { get; }
         #endregion
 
         #region Constructors
-        public UserRegisteredEvent(Guid userId, string username, string email, string fullName)
+        public UserDeactivatedEvent(Guid userId, string username, string reason, string deactivatedBy)
         {
             UserId = userId;
             Username = username;
-            Email = email;
-            FullName = fullName;
+            Reason = reason;
+            DeactivatedBy = deactivatedBy;
         } 
         #endregion
     }

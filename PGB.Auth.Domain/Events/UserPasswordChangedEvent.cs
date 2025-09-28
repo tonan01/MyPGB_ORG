@@ -8,28 +8,26 @@ using System.Threading.Tasks;
 namespace PGB.Auth.Domain.Events
 {
     /// <summary>
-    /// Domain event => user registered successfully
-    /// effects: welcome email, setup default settings, etc.
+    /// Event => user changed password successfully
+    /// Trigger: send notification email, revoke all refresh tokens, audit log
     /// </summary>
-    public class UserRegisteredEvent : DomainEvent
+    public class UserPasswordChangedEvent : DomainEvent
     {
         #region Properties
         public Guid UserId { get; }
-        /// <summary>
-        /// Username to personalize welcome message
-        /// </summary>
         public string Username { get; }
-        public string Email { get; }
-        public string FullName { get; }
+        /// <summary>
+        /// forgot password flow
+        /// </summary>
+        public bool IsPasswordReset { get; }
         #endregion
 
         #region Constructors
-        public UserRegisteredEvent(Guid userId, string username, string email, string fullName)
+        public UserPasswordChangedEvent(Guid userId, string username, bool isPasswordReset = false)
         {
             UserId = userId;
             Username = username;
-            Email = email;
-            FullName = fullName;
+            IsPasswordReset = isPasswordReset;
         } 
         #endregion
     }

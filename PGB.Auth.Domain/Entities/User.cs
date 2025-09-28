@@ -1,5 +1,8 @@
 ﻿using PGB.Auth.Domain.Events;
+using PGB.Auth.Domain.ValueObjects;
 using PGB.BuildingBlocks.Domain.Entities;
+using PGB.BuildingBlocks.Domain.Exceptions;
+using PGB.BuildingBlocks.Domain.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,69 +11,220 @@ using System.Threading.Tasks;
 
 namespace PGB.Auth.Domain.Entities
 {
-    public class User : BaseEntity
+    public class User : AggregateRoot
     {
-        public string Username { get; private set; } = string.Empty;
-        public string PasswordHash { get; private set; } = string.Empty;
-        public string Email { get; private set; } = string.Empty;
-        public string FirstName { get; private set; } = string.Empty;
-        public string LastName { get; private set; } = string.Empty;
+        #region Properties
+        public Username Username { get; private set; } = null!;
+        public HashedPassword PasswordHash { get; private set; } = null!;
+        public Email Email { get; private set; } = null!;
+        public FullName FullName { get; private set; } = null!;
         public bool IsActive { get; private set; } = true;
+        public bool IsEmailVerified { get; private set; } = false;
+        public int FailedLoginAttempts { get; private set; } = 0;
+        public DateTime? LockedUntil { get; private set; }
         public DateTime? LastLoginAt { get; private set; }
+        public string? LastLoginIpAddress { get; private set; }
+        #endregion
 
-        // Navigation properties
+        #region Navigation Properties
         public ICollection<RefreshToken> RefreshTokens { get; private set; } = new List<RefreshToken>();
+        #endregion
 
-        // Constructor for EF
+        #region Constructors
         protected User() { }
 
-        // Factory method
-        public static User Create(string username, string passwordHash, string email,
-            string firstName, string lastName, string createdBy)
+        private User(Username username, Email email, FullName fullName,
+                    HashedPassword passwordHash, string createdBy)
         {
-            var user = new User
-            {
-                Username = username,
-                PasswordHash = passwordHash,
-                Email = email,
-                FirstName = firstName,
-                LastName = lastName,
-                CreatedBy = createdBy
-            };
+            Username = username;
+            Email = email;
+            FullName = fullName;
+            PasswordHash = passwordHash;
+            CreatedBy = createdBy;
+        }
+        #endregion
 
-            // Add domain event
-            user.AddDomainEvent(new UserRegisteredEvent(user.Id, username, email));
+        #region Factory Methods
+        public static User Register(
+            Username username,
+            Email email,
+            FullName fullName,
+            HashedPassword passwordHash,
+            string createdBy = "system")
+        {
+            var user = new User(username, email, fullName, passwordHash, createdBy);
+
+            // Raise domain event
+            user.RaiseDomainEvent(new UserRegisteredEvent(
+                user.Id, username.Value, email.Value, fullName.DisplayName));
 
             return user;
         }
+        #endregion
 
-        public void UpdateProfile(string firstName, string lastName, string email, string updatedBy)
+        #region Authentication Methods
+        public void Login(string ipAddress, string userAgent, string updatedBy)
         {
-            FirstName = firstName;
-            LastName = lastName;
-            Email = email;
+            if (IsLocked)
+                throw new DomainException($"Tài khoản bị khóa đến {LockedUntil:dd/MM/yyyy HH:mm}");
+
+            if (!IsActive)
+                throw new DomainException("Tài khoản đã bị vô hiệu hóa");
+
+            // Reset failed attempts on successful login
+            FailedLoginAttempts = 0;
+            LockedUntil = null;
+            LastLoginAt = DateTime.UtcNow;
+            LastLoginIpAddress = ipAddress;
+            MarkAsUpdated(updatedBy);
+
+            // Raise domain event
+            RaiseDomainEvent(new UserLoggedInEvent(Id, Username.Value, ipAddress, userAgent));
+        }
+
+        public void RecordFailedLogin(SecuritySettings securitySettings, string updatedBy)
+        {
+            FailedLoginAttempts++;
+
+            if (FailedLoginAttempts >= securitySettings.MaxFailedAttempts)
+            {
+                LockedUntil = DateTime.UtcNow.AddMinutes(securitySettings.LockoutDurationMinutes);
+            }
+
             MarkAsUpdated(updatedBy);
         }
 
-        public void UpdatePassword(string newPasswordHash, string updatedBy)
+        public bool VerifyPassword(string plainPassword, IPasswordHasher passwordHasher)
         {
+            return PasswordHash.Verify(plainPassword, passwordHasher);
+        }
+        #endregion
+
+        #region Password Management
+        public void ChangePassword(
+            string currentPassword,
+            HashedPassword newPasswordHash,
+            IPasswordHasher passwordHasher,
+            string updatedBy)
+        {
+            // Verify current password
+            if (!VerifyPassword(currentPassword, passwordHasher))
+                throw new DomainException("Mật khẩu hiện tại không đúng");
+
             PasswordHash = newPasswordHash;
             MarkAsUpdated(updatedBy);
+
+            // Revoke all refresh tokens for security
+            RevokeAllRefreshTokens(updatedBy, "Password changed");
+
+            // Raise domain event
+            RaiseDomainEvent(new UserPasswordChangedEvent(Id, Username.Value, false));
         }
 
-        public void RecordLogin(string updatedBy)
+        public void ResetPassword(HashedPassword newPasswordHash, string updatedBy)
         {
-            LastLoginAt = DateTime.UtcNow;
+            PasswordHash = newPasswordHash;
+            FailedLoginAttempts = 0;
+            LockedUntil = null;
             MarkAsUpdated(updatedBy);
 
-            // Add domain event
-            AddDomainEvent(new UserLoggedInEvent(Id, Username));
+            // Revoke all refresh tokens
+            RevokeAllRefreshTokens(updatedBy, "Password reset");
+
+            // Raise domain event
+            RaiseDomainEvent(new UserPasswordChangedEvent(Id, Username.Value, true));
+        }
+        #endregion
+
+        #region Profile Management
+        public void UpdateProfile(FullName fullName, string updatedBy)
+        {
+            FullName = fullName;
+            MarkAsUpdated(updatedBy);
         }
 
-        public void Deactivate(string deletedBy)
+        public void ChangeEmail(Email newEmail, string updatedBy)
+        {
+            if (Email.Equals(newEmail))
+                return; // No change needed
+
+            Email = newEmail;
+            IsEmailVerified = false; // Need to re-verify new email
+            MarkAsUpdated(updatedBy);
+        }
+
+        public void VerifyEmail(string updatedBy)
+        {
+            IsEmailVerified = true;
+            MarkAsUpdated(updatedBy);
+        }
+        #endregion
+
+        #region Account Management
+        public void Deactivate(string reason, string deactivatedBy)
         {
             IsActive = false;
-            MarkAsDeleted(deletedBy);
+            MarkAsUpdated(deactivatedBy);
+
+            RevokeAllRefreshTokens(deactivatedBy, "User deactivated");
+            RaiseDomainEvent(new UserDeactivatedEvent(Id, Username.Value, reason, deactivatedBy));
         }
+
+        public void Activate(string updatedBy)
+        {
+            IsActive = true;
+            FailedLoginAttempts = 0;
+            LockedUntil = null;
+            MarkAsUpdated(updatedBy);
+        }
+
+        public void Unlock(string updatedBy)
+        {
+            FailedLoginAttempts = 0;
+            LockedUntil = null;
+            MarkAsUpdated(updatedBy);
+        }
+        #endregion
+
+        #region Token Management
+        public RefreshToken AddRefreshToken(string tokenValue, DateTime expiresAt, string createdBy)
+        {
+            // Clean up expired tokens trước khi add new
+            CleanupExpiredTokens();
+
+            var refreshToken = RefreshToken.Create(Id, tokenValue, expiresAt, createdBy);
+            RefreshTokens.Add(refreshToken);
+            return refreshToken;
+        }
+
+        public void RevokeAllRefreshTokens(string revokedBy, string reason = "Manual revoke")
+        {
+            foreach (var token in RefreshTokens.Where(t => !t.IsRevoked))
+            {
+                token.Revoke(revokedBy, reason);
+            }
+        }
+
+        private void CleanupExpiredTokens()
+        {
+            var expiredTokens = RefreshTokens.Where(t => t.IsExpired).ToList();
+            foreach (var token in expiredTokens)
+            {
+                RefreshTokens.Remove(token);
+            }
+        }
+        #endregion
+
+        #region Computed Properties
+        public bool IsLocked => LockedUntil.HasValue && LockedUntil.Value > DateTime.UtcNow;
+
+        public string UsernameValue => Username.Value;
+
+        public string EmailValue => Email.Value;
+
+        public string DisplayName => FullName.DisplayName;
+
+        public string Initials => FullName.Initials;
+        #endregion
     }
 }
