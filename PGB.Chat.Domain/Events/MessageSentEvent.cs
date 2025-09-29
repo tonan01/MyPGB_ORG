@@ -7,11 +7,8 @@ using System.Threading.Tasks;
 
 namespace PGB.Chat.Domain.Events
 {
-    public class MessageSentEvent : IDomainEvent
+    public class MessageSentEvent : DomainEvent
     {
-        public Guid EventId { get; } = Guid.NewGuid();
-        public DateTime OccurredAt { get; } = DateTime.UtcNow;
-
         public Guid MessageId { get; }
         public Guid ChatRoomId { get; }
         public Guid SenderId { get; }

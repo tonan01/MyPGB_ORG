@@ -7,20 +7,21 @@ using System.Threading.Tasks;
 
 namespace PGB.Todo.Domain.Events
 {
-    public class TodoItemCreatedEvent : IDomainEvent
+    public class TodoItemCreatedEvent : DomainEvent
     {
-        public Guid EventId { get; } = Guid.NewGuid();
-        public DateTime OccurredAt { get; } = DateTime.UtcNow;
-
+        #region Properties
         public Guid TodoItemId { get; }
         public string Title { get; }
         public Guid UserId { get; }
+        #endregion
 
+        #region Constructors
         public TodoItemCreatedEvent(Guid todoItemId, string title, Guid userId)
         {
             TodoItemId = todoItemId;
             Title = title;
             UserId = userId;
-        }
+        } 
+        #endregion
     }
 }

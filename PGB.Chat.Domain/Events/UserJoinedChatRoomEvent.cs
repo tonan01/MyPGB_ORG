@@ -7,20 +7,21 @@ using System.Threading.Tasks;
 
 namespace PGB.Chat.Domain.Events
 {
-    public class UserJoinedChatRoomEvent : IDomainEvent
+    public class UserJoinedChatRoomEvent : DomainEvent
     {
-        public Guid EventId { get; } = Guid.NewGuid();
-        public DateTime OccurredAt { get; } = DateTime.UtcNow;
-
+        #region Properties
         public Guid ChatRoomId { get; }
         public Guid UserId { get; }
         public string ChatRoomName { get; }
+        #endregion
 
+        #region Constructors
         public UserJoinedChatRoomEvent(Guid chatRoomId, Guid userId, string chatRoomName)
         {
             ChatRoomId = chatRoomId;
             UserId = userId;
             ChatRoomName = chatRoomName;
-        }
+        } 
+        #endregion
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PGB.BuildingBlocks.Domain.Entities;
-using PGB.BuildingBlocks.Domain.Events;
 using MediatR;
 using System.Linq.Expressions;
 
@@ -62,15 +61,15 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
 
             var domainEntities = ChangeTracker
                 .Entries<BaseEntity<Guid>>()
-                .Where(x => x.Entity.DomainEvents.Any())
+                //.Where(x => x.Entity.DomainEvents.Any())
                 .ToList();
 
             var domainEvents = domainEntities
-                .SelectMany(x => x.Entity.DomainEvents)
+                //.SelectMany(x => x.Entity.DomainEvents)
                 .ToList();
 
-            domainEntities.ToList()
-                .ForEach(entity => entity.Entity.ClearDomainEvents());
+            domainEntities.ToList();
+                //.ForEach(entity => entity.Entity.ClearDomainEvents());
 
             foreach (var domainEvent in domainEvents)
             {
@@ -109,7 +108,7 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
                         b.Property(nameof(BaseEntity<Guid>.DeletedBy)).HasMaxLength(100);
 
                         // Ignore DomainEvents for EF
-                        b.Ignore(nameof(BaseEntity<Guid>.DomainEvents));
+                        //b.Ignore(nameof(BaseEntity<Guid>.DomainEvents));
                     });
                 }
             }

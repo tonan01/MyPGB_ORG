@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace PGB.Auth.Domain.ValueObjects
 {
-    #region Simple Password Hash Value Object
     public class PasswordHash : ValueObject
     {
         #region Properties

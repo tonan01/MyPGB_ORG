@@ -54,7 +54,6 @@ namespace PGB.Auth.Domain.Entities
         {
             var user = new User(username, email, fullName, passwordHash, createdBy);
 
-            // Raise domain event
             user.RaiseDomainEvent(new UserRegisteredEvent(
                 user.Id, username.Value, email.Value, fullName.DisplayName));
 
@@ -71,14 +70,12 @@ namespace PGB.Auth.Domain.Entities
             if (!IsActive)
                 throw new DomainException("Tài khoản đã bị vô hiệu hóa");
 
-            // Reset failed attempts on successful login
             FailedLoginAttempts = 0;
             LockedUntil = null;
             LastLoginAt = DateTime.UtcNow;
             LastLoginIpAddress = ipAddress;
             MarkAsUpdated(updatedBy);
 
-            // Raise domain event
             RaiseDomainEvent(new UserLoggedInEvent(Id, Username.Value, ipAddress, userAgent));
         }
 
@@ -107,17 +104,13 @@ namespace PGB.Auth.Domain.Entities
             IPasswordHasher passwordHasher,
             string updatedBy)
         {
-            // Verify current password
             if (!VerifyPassword(currentPassword, passwordHasher))
                 throw new DomainException("Mật khẩu hiện tại không đúng");
 
             PasswordHash = newPasswordHash;
             MarkAsUpdated(updatedBy);
 
-            // Revoke all refresh tokens for security
             RevokeAllRefreshTokens(updatedBy, "Password changed");
-
-            // Raise domain event
             RaiseDomainEvent(new UserPasswordChangedEvent(Id, Username.Value, false));
         }
 
@@ -128,10 +121,7 @@ namespace PGB.Auth.Domain.Entities
             LockedUntil = null;
             MarkAsUpdated(updatedBy);
 
-            // Revoke all refresh tokens
             RevokeAllRefreshTokens(updatedBy, "Password reset");
-
-            // Raise domain event
             RaiseDomainEvent(new UserPasswordChangedEvent(Id, Username.Value, true));
         }
         #endregion
@@ -146,10 +136,10 @@ namespace PGB.Auth.Domain.Entities
         public void ChangeEmail(Email newEmail, string updatedBy)
         {
             if (Email.Equals(newEmail))
-                return; // No change needed
+                return;
 
             Email = newEmail;
-            IsEmailVerified = false; // Need to re-verify new email
+            IsEmailVerified = false;
             MarkAsUpdated(updatedBy);
         }
 
@@ -189,7 +179,6 @@ namespace PGB.Auth.Domain.Entities
         #region Token Management
         public RefreshToken AddRefreshToken(string tokenValue, DateTime expiresAt, string createdBy)
         {
-            // Clean up expired tokens trước khi add new
             CleanupExpiredTokens();
 
             var refreshToken = RefreshToken.Create(Id, tokenValue, expiresAt, createdBy);
@@ -217,13 +206,9 @@ namespace PGB.Auth.Domain.Entities
 
         #region Computed Properties
         public bool IsLocked => LockedUntil.HasValue && LockedUntil.Value > DateTime.UtcNow;
-
         public string UsernameValue => Username.Value;
-
         public string EmailValue => Email.Value;
-
         public string DisplayName => FullName.DisplayName;
-
         public string Initials => FullName.Initials;
         #endregion
     }
