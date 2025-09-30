@@ -41,6 +41,8 @@ namespace PGB.Auth.Infrastructure.Data
                         .HasColumnName("Username")
                         .IsRequired()
                         .HasMaxLength(50);
+                    // Create index on the owned value object's Value property
+                    username.HasIndex(u => u.Value).IsUnique().HasDatabaseName("IX_Users_Username");
                 });
 
                 // Email Value Object
@@ -50,6 +52,8 @@ namespace PGB.Auth.Infrastructure.Data
                         .HasColumnName("Email")
                         .IsRequired()
                         .HasMaxLength(255);
+                    // Create index on the owned value object's Value property
+                    email.HasIndex(e => e.Value).IsUnique().HasDatabaseName("IX_Users_Email");
                 });
 
                 // FullName Value Object
@@ -96,9 +100,7 @@ namespace PGB.Auth.Infrastructure.Data
                 entity.Property(e => e.IsEmailVerified).HasDefaultValue(false);
                 entity.Property(e => e.FailedLoginAttempts).HasDefaultValue(0);
 
-                // Indexes for performance
-                entity.HasIndex(e => e.Username.Value).IsUnique().HasDatabaseName("IX_Users_Username");
-                entity.HasIndex(e => e.Email.Value).IsUnique().HasDatabaseName("IX_Users_Email");
+                // Indexes for performance handled inside owned type mappings above
                 entity.HasIndex(e => e.IsActive).HasDatabaseName("IX_Users_IsActive");
                 entity.HasIndex(e => e.CreatedAt).HasDatabaseName("IX_Users_CreatedAt");
                 entity.HasIndex(e => e.IsDeleted).HasDatabaseName("IX_Users_IsDeleted");
