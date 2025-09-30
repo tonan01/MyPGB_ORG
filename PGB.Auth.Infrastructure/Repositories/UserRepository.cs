@@ -172,7 +172,31 @@ namespace PGB.Auth.Infrastructure.Repositories
         #region Unit of Work
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            return await _context.SaveChangesAsync(cancellationToken);
+            try
+            {
+                return await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+            {
+                // Reload modified entries and retry once
+                var modifiedEntries = _context.ChangeTracker.Entries()
+                    .Where(e => e.State == EntityState.Modified)
+                    .ToList();
+
+                foreach (var entry in modifiedEntries)
+                {
+                    try
+                    {
+                        await entry.ReloadAsync(cancellationToken);
+                    }
+                    catch
+                    {
+                        // ignore reload errors
+                    }
+                }
+
+                return await _context.SaveChangesAsync(cancellationToken);
+            }
         }
         #endregion
     }

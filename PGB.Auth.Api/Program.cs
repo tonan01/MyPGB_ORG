@@ -30,7 +30,9 @@ builder.Services.AddApplicationServices(Assembly.Load("PGB.Auth.Application"));
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 // Register Auth DbContext (cập nhật connection string name cho phù hợp)
-var conn = builder.Configuration.GetConnectionString("AuthDatabase") ?? "...";
+var conn = builder.Configuration.GetConnectionString("AuthDatabase")
+          ?? builder.Configuration.GetConnectionString("DefaultConnection")
+          ?? throw new InvalidOperationException("DB connection string 'AuthDatabase' or 'DefaultConnection' not configured");
 builder.Services.AddDbContextPool<AuthDbContext>(options =>
     options.UseSqlServer(conn, sql =>
     {
@@ -85,6 +87,13 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+// Enable EF SQL logging when in development
+if (app.Environment.IsDevelopment())
+{
+    var loggerFactory = app.Services.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>();
+    loggerFactory.CreateLogger("EF").LogInformation("EF logging enabled");
 }
 
 app.UseHttpsRedirection();

@@ -13,7 +13,7 @@ namespace PGB.Auth.Infrastructure.Data
         {
         }
 
-        public AuthDbContext(DbContextOptions<AuthDbContext> options, IMediator mediator, PGB.BuildingBlocks.Domain.Interfaces.ICurrentUserService currentUserService)
+        internal AuthDbContext(DbContextOptions<AuthDbContext> options, IMediator mediator, PGB.BuildingBlocks.Domain.Interfaces.ICurrentUserService currentUserService)
             : base(options, mediator, currentUserService)
         {
         }
