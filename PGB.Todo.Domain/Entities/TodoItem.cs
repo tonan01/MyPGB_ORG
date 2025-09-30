@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace PGB.Todo.Domain.Entities
 {
-    public class TodoItem : BaseEntity
+    public class TodoItem : AggregateRoot
     {
         public string Title { get; private set; } = string.Empty;
         public string Description { get; private set; } = string.Empty;
