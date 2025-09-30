@@ -10,16 +10,16 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
     public abstract class BaseDbContext : DbContext
     {
         private readonly IMediator? _mediator;
-        // If there's no current user service available, fall back to a system account
-        private const string CurrentUserFallback = "system";
+        private readonly ICurrentUserService? _currentUserService;
 
         protected BaseDbContext(DbContextOptions options) : base(options)
         {
         }
 
-        protected BaseDbContext(DbContextOptions options, IMediator mediator) : base(options)
+        protected BaseDbContext(DbContextOptions options, IMediator mediator, ICurrentUserService currentUserService) : base(options)
         {
             _mediator = mediator;
+            _currentUserService = currentUserService;
         }
 
         public override int SaveChanges()
@@ -52,10 +52,10 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
                     case EntityState.Added:
                         // use EF property accessors to set protected setters
                         entry.Property(nameof(BaseEntity<Guid>.CreatedAt)).CurrentValue = DateTime.UtcNow;
-                        entry.Property(nameof(BaseEntity<Guid>.CreatedBy)).CurrentValue = CurrentUserFallback;
+                        entry.Property(nameof(BaseEntity<Guid>.CreatedBy)).CurrentValue = _currentUserService?.GetCurrentUsername() ?? "system";
                         break;
                     case EntityState.Modified:
-                        entity.MarkAsUpdated(CurrentUserFallback);
+                        entity.MarkAsUpdated(_currentUserService?.GetCurrentUsername() ?? "system");
                         break;
                 }
             }

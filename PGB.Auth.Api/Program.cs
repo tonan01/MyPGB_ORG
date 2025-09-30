@@ -18,6 +18,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Register IHttpContextAccessor and CurrentUserService
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<PGB.Auth.Api.Services.CurrentUserService>();
+builder.Services.AddScoped<PGB.BuildingBlocks.Domain.Interfaces.ICurrentUserService>(sp => sp.GetRequiredService<PGB.Auth.Api.Services.CurrentUserService>());
+
 // Register Application services (MediatR, validators, behaviors, AutoMapper)
 builder.Services.AddApplicationServices(Assembly.Load("PGB.Auth.Application"));
 
