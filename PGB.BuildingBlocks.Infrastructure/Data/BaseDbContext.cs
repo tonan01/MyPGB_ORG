@@ -1,13 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PGB.BuildingBlocks.Domain.Entities;
 using MediatR;
+using System.Linq;
 using System.Linq.Expressions;
+using PGB.BuildingBlocks.Domain.Interfaces;
 
 namespace PGB.BuildingBlocks.Infrastructure.Data
 {
     public abstract class BaseDbContext : DbContext
     {
         private readonly IMediator? _mediator;
+        // If there's no current user service available, fall back to a system account
+        private const string CurrentUserFallback = "system";
 
         protected BaseDbContext(DbContextOptions options) : base(options)
         {
@@ -36,20 +40,22 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
 
         private void UpdateAuditableEntities()
         {
-            var entries = ChangeTracker.Entries<BaseEntity<Guid>>();
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.Entity is BaseEntity<Guid>)
+                .ToList();
 
             foreach (var entry in entries)
             {
+                var entity = (BaseEntity<Guid>)entry.Entity;
                 switch (entry.State)
                 {
                     case EntityState.Added:
-                        entry.Entity.GetType()
-                            .GetProperty(nameof(BaseEntity<Guid>.CreatedAt))?
-                            .SetValue(entry.Entity, DateTime.UtcNow);
+                        // use EF property accessors to set protected setters
+                        entry.Property(nameof(BaseEntity<Guid>.CreatedAt)).CurrentValue = DateTime.UtcNow;
+                        entry.Property(nameof(BaseEntity<Guid>.CreatedBy)).CurrentValue = CurrentUserFallback;
                         break;
-
                     case EntityState.Modified:
-                        entry.Entity.MarkAsUpdated("system"); // You can inject current user later
+                        entity.MarkAsUpdated(CurrentUserFallback);
                         break;
                 }
             }
@@ -60,21 +66,20 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
             if (_mediator == null) return;
 
             var domainEntities = ChangeTracker
-                .Entries<BaseEntity<Guid>>()
-                //.Where(x => x.Entity.DomainEvents.Any())
+                .Entries()
+                .Select(e => e.Entity)
+                .OfType<IHasDomainEvents>()
+                .Where(e => e.DomainEvents != null && e.DomainEvents.Any())
                 .ToList();
 
             var domainEvents = domainEntities
-                //.SelectMany(x => x.Entity.DomainEvents)
+                .SelectMany(e => e.DomainEvents)
                 .ToList();
 
-            domainEntities.ToList();
-                //.ForEach(entity => entity.Entity.ClearDomainEvents());
+            domainEntities.ForEach(e => e.ClearDomainEvents());
 
             foreach (var domainEvent in domainEvents)
-            {
                 await _mediator.Publish(domainEvent);
-            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

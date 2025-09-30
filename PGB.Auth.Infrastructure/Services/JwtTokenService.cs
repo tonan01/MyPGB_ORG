@@ -5,6 +5,7 @@ using System.Text;
 using PGB.Auth.Application.Services;
 using PGB.Auth.Domain.Entities;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace PGB.Auth.Infrastructure.Services
 {
@@ -13,6 +14,7 @@ namespace PGB.Auth.Infrastructure.Services
     {
         #region Dependencies
         private readonly IConfiguration _configuration;
+        private readonly ILogger<JwtTokenService> _logger;
         private readonly string _secretKey;
         private readonly string _issuer;
         private readonly string _audience;
@@ -20,9 +22,10 @@ namespace PGB.Auth.Infrastructure.Services
         #endregion
 
         #region Constructor
-        public JwtTokenService(IConfiguration configuration)
+        public JwtTokenService(IConfiguration configuration, ILogger<JwtTokenService> logger)
         {
             _configuration = configuration;
+            _logger = logger;
             _secretKey = configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
             _issuer = configuration["JwtSettings:Issuer"] ?? "PGB_ORG";
             _audience = configuration["JwtSettings:Audience"] ?? "PGB_ORG_Users";
@@ -71,7 +74,6 @@ namespace PGB.Auth.Infrastructure.Services
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var key = Encoding.ASCII.GetBytes(_secretKey);
-
                 var validationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
@@ -87,8 +89,9 @@ namespace PGB.Auth.Infrastructure.Services
                 var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
                 return principal;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogWarning(ex, "ValidateToken failed");
                 return null;
             }
         }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace PGB.Chat.Domain.Entities
 {
-    public class ChatRoomUser : BaseEntity
+    public class ChatRoomUser : AggregateRoot
     {
         public Guid ChatRoomId { get; private set; }
         public Guid UserId { get; private set; }

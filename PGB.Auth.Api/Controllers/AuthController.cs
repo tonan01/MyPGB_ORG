@@ -29,7 +29,6 @@ namespace PGB.Auth.Api.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<RegisterUserResponse>> Register([FromBody] RegisterUserCommand command)
         {
-            command.UserId = GetCurrentUserId();
             var result = await _mediator.Send(command);
             return Created($"/api/users/{result.UserId}", result);
         }
