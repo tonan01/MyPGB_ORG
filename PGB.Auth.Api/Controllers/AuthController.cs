@@ -27,23 +27,39 @@ namespace PGB.Auth.Api.Controllers
         /// Register new user
         /// </summary>
         [HttpPost("register")]
-        public async Task<ActionResult<RegisterUserResponse>> Register([FromBody] RegisterUserCommand command)
+        public async Task<ActionResult> Register([FromBody] RegisterUserCommand command)
         {
             var result = await _mediator.Send(command);
-            return Created($"/api/users/{result.UserId}", result);
+            var response = new PGB.Auth.Api.Models.ApiResponse<RegisterUserResponse>
+            {
+                Success = true,
+                Data = result,
+                CorrelationId = HttpContext.TraceIdentifier
+            };
+
+            return Created($"/api/users/{result.UserId}", response);
         }
 
         /// <summary>
         /// User login
         /// </summary>
         [HttpPost("login")]
-        public async Task<ActionResult<LoginUserResponse>> Login([FromBody] LoginUserCommand command)
+        public async Task<ActionResult> Login([FromBody] LoginUserCommand command)
         {
             command.IpAddress = GetClientIpAddress();
             command.UserAgent = Request.Headers["User-Agent"].ToString();
 
             var result = await _mediator.Send(command);
-            return Ok(result);
+            var response = new PGB.Auth.Api.Models.ApiResponse<LoginUserResponse>
+            {
+                Success = true,
+                Data = result,
+                CorrelationId = HttpContext.TraceIdentifier,
+                Message = "Login successful",
+                Timestamp = DateTime.UtcNow
+            };
+
+            return Ok(response);
         }
 
         /// <summary>

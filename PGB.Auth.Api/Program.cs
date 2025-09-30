@@ -9,11 +9,14 @@ using PGB.Auth.Infrastructure.Repositories;
 using PGB.Auth.Infrastructure.Services;
 using PGB.BuildingBlocks.Application.Extensions;
 using System.Reflection;
+using PGB.BuildingBlocks.WebApi.Common.Extensions;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services
+// Use shared WebApi.Common services
+builder.AddWebApiCommon();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -88,6 +91,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Use shared middleware (correlation id, etc)
+app.UseWebApiCommon();
 
 // Enable EF SQL logging when in development
 if (app.Environment.IsDevelopment())

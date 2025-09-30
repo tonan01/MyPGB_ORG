@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PGB.Auth.Application\PGB.Auth.Application.csproj" />
     <ProjectReference Include="..\PGB.Auth.Infrastructure\PGB.Auth.Infrastructure.csproj" />
+    <ProjectReference Include="..\PGB.BuildingBlocks.WebApi.Common\PGB.BuildingBlocks.WebApi.Common.csproj" />
   </ItemGroup>
 
 </Project>
