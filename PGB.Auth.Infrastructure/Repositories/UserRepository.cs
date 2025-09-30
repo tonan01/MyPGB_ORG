@@ -176,14 +176,14 @@ namespace PGB.Auth.Infrastructure.Repositories
             {
                 return await _context.SaveChangesAsync(cancellationToken);
             }
-            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
             {
-                // Reload modified entries and retry once
-                var modifiedEntries = _context.ChangeTracker.Entries()
-                    .Where(e => e.State == EntityState.Modified)
+                // First attempt failed due to concurrency - try to reload conflicting entries and retry once
+                var entries = _context.ChangeTracker.Entries()
+                    .Where(e => e.State == EntityState.Modified || e.State == EntityState.Deleted || e.State == EntityState.Added)
                     .ToList();
 
-                foreach (var entry in modifiedEntries)
+                foreach (var entry in entries)
                 {
                     try
                     {
@@ -195,7 +195,15 @@ namespace PGB.Auth.Infrastructure.Repositories
                     }
                 }
 
-                return await _context.SaveChangesAsync(cancellationToken);
+                try
+                {
+                    return await _context.SaveChangesAsync(cancellationToken);
+                }
+                catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex2)
+                {
+                    // Still failing - wrap and surface as application concurrency error
+                    throw new PGB.BuildingBlocks.Application.Exceptions.ConcurrencyException("Concurrency conflict detected while saving changes.", ex2);
+                }
             }
         }
         #endregion

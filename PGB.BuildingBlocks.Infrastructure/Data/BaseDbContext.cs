@@ -111,6 +111,8 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
                         b.Property(nameof(BaseEntity<Guid>.CreatedBy)).HasMaxLength(100);
                         b.Property(nameof(BaseEntity<Guid>.UpdatedBy)).HasMaxLength(100);
                         b.Property(nameof(BaseEntity<Guid>.DeletedBy)).HasMaxLength(100);
+                        // Configure RowVersion concurrency token if present
+                        b.Property("RowVersion").IsRowVersion();
 
                         // Ignore DomainEvents for EF
                         //b.Ignore(nameof(BaseEntity<Guid>.DomainEvents));

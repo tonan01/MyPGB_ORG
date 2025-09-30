@@ -50,47 +50,63 @@ namespace PGB.Auth.Application.Commands.Handlers
             }
 
             // 2. Verify password
-            try
+            if (!user.VerifyPassword(request.Password, _passwordHasher))
             {
-                if (!user.VerifyPassword(request.Password, _passwordHasher))
-                {
-                    user.RecordFailedLogin(_securitySettings, "system");
-                    await _userRepository.SaveChangesAsync(cancellationToken);
-                    throw new AuthenticationException("Thông tin đăng nhập không hợp lệ");
-                }
-
-                // 3. Successful login
-                user.Login(request.IpAddress ?? "Unknown", request.UserAgent ?? "Unknown", "system");
-
-                // 4. Generate tokens
-                var accessToken = _jwtTokenService.GenerateAccessToken(user);
-                var refreshTokenValue = _userDomainService.GenerateRefreshToken();
-                var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(_securitySettings.RefreshTokenLifetimeDays);
-
-                var refreshToken = user.AddRefreshToken(refreshTokenValue, refreshTokenExpiresAt, "system");
-
-                // 5. Save changes
+                user.RecordFailedLogin(_securitySettings, "system");
                 await _userRepository.SaveChangesAsync(cancellationToken);
+                throw new AuthenticationException("Thông tin đăng nhập không hợp lệ");
+            }
 
-                // 6. Return response
-                return new LoginUserResponse
-                {
-                    AccessToken = accessToken.Token,
-                    RefreshToken = refreshToken.Token,
-                    AccessTokenExpiresAt = accessToken.ExpiresAt,
-                    RefreshTokenExpiresAt = refreshToken.ExpiresAt,
-                    UserId = user.Id,
-                    Username = user.UsernameValue,
-                    Email = user.EmailValue,
-                    FullName = user.DisplayName,
-                    IsEmailVerified = user.IsEmailVerified
-                };
-            }
-            catch (DomainException)
+            // Proceed with login and targeted retry on concurrency
+            for (int attempt = 0; attempt < 2; attempt++)
             {
-                // User might be locked, deactivated, etc.
-                throw;
+                try
+                {
+                    // 3. Successful login
+                    user.Login(request.IpAddress ?? "Unknown", request.UserAgent ?? "Unknown", "system");
+
+                    // 4. Generate tokens
+                    var accessToken = _jwtTokenService.GenerateAccessToken(user);
+                    var refreshTokenValue = _userDomainService.GenerateRefreshToken();
+                    var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(_securitySettings.RefreshTokenLifetimeDays);
+
+                    var refreshToken = user.AddRefreshToken(refreshTokenValue, refreshTokenExpiresAt, "system");
+
+                    // 5. Save changes
+                    await _userRepository.SaveChangesAsync(cancellationToken);
+
+                    // 6. Return response
+                    return new LoginUserResponse
+                    {
+                        AccessToken = accessToken.Token,
+                        RefreshToken = refreshToken.Token,
+                        AccessTokenExpiresAt = accessToken.ExpiresAt,
+                        RefreshTokenExpiresAt = refreshToken.ExpiresAt,
+                        UserId = user.Id,
+                        Username = user.UsernameValue,
+                        Email = user.EmailValue,
+                        FullName = user.DisplayName,
+                        IsEmailVerified = user.IsEmailVerified
+                    };
+                }
+                catch (PGB.BuildingBlocks.Application.Exceptions.ConcurrencyException)
+                {
+                    if (attempt == 0)
+                    {
+                        // refresh user from DB and retry once
+                        user = await FindUserByUsernameOrEmail(request.UsernameOrEmail, cancellationToken);
+                        if (user == null)
+                            throw new AuthenticationException("Thông tin đăng nhập không hợp lệ");
+                        continue; // retry
+                    }
+
+                    // second failure -> propagate concurrency as application exception
+                    throw;
+                }
             }
+
+            // Should not reach here
+            throw new AuthenticationException("Thông tin đăng nhập không hợp lệ");
         }
         #endregion
 

@@ -46,6 +46,27 @@ namespace PGB.BuildingBlocks.WebApi.Common.Filters
                 CorrelationId = traceId
             };
 
+            // Convert concurrency exceptions to standardized 409 response
+            if (context.Exception is PGB.BuildingBlocks.Application.Exceptions.ConcurrencyException cex)
+            {
+                var conflictError = new ApiError
+                {
+                    Code = "CONCURRENCY_ERROR",
+                    Message = cex.Message,
+                    TraceId = traceId
+                };
+
+                var conflictResult = new ApiErrorResponse
+                {
+                    Error = conflictError,
+                    CorrelationId = traceId
+                };
+
+                context.Result = new ObjectResult(conflictResult) { StatusCode = 409 };
+                context.ExceptionHandled = true;
+                return;
+            }
+
             context.Result = new ObjectResult(genericResult) { StatusCode = 500 };
             context.ExceptionHandled = true;
         }

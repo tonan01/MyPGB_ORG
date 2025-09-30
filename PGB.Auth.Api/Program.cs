@@ -26,6 +26,14 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<PGB.Auth.Api.Services.CurrentUserService>();
 builder.Services.AddScoped<PGB.BuildingBlocks.Domain.Interfaces.ICurrentUserService>(sp => sp.GetRequiredService<PGB.Auth.Api.Services.CurrentUserService>());
 
+// Optional: register Redis multiplexer if configured
+var redisConn = builder.Configuration.GetSection("Redis")["ConnectionString"];
+if (!string.IsNullOrEmpty(redisConn))
+{
+    var mux = StackExchange.Redis.ConnectionMultiplexer.Connect(redisConn);
+    builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(mux);
+}
+
 // Register Application services (MediatR, validators, behaviors, AutoMapper)
 builder.Services.AddApplicationServices(Assembly.Load("PGB.Auth.Application"));
 
@@ -109,3 +117,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.Run();
+
+// Make the implicit Program class available for integration tests
+public partial class Program { }

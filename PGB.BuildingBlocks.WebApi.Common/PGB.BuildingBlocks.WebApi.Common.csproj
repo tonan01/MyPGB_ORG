@@ -12,5 +12,8 @@
   <ItemGroup>
     <ProjectReference Include="..\PGB.BuildingBlocks.Application\PGB.BuildingBlocks.Application.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="StackExchange.Redis" Version="2.9.99-gfe04f9c406" />
+  </ItemGroup>
 
 </Project>

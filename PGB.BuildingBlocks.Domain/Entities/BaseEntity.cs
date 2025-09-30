@@ -19,6 +19,8 @@ namespace PGB.BuildingBlocks.Domain.Entities
         public bool IsDeleted { get; protected set; } = false;
         public DateTime? DeletedAt { get; protected set; }
         public string? DeletedBy { get; protected set; }
+        // RowVersion for optimistic concurrency
+        public byte[]? RowVersion { get; protected set; }
         #endregion
 
         #region Constructors
