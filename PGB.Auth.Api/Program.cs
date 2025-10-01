@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.EntityFrameworkCore;
 using PGB.Auth.Application.Repositories;
 using PGB.Auth.Application.Services;
 using PGB.Auth.Domain.ValueObjects;
@@ -26,13 +24,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<PGB.Auth.Api.Services.CurrentUserService>();
 builder.Services.AddScoped<PGB.BuildingBlocks.Domain.Interfaces.ICurrentUserService>(sp => sp.GetRequiredService<PGB.Auth.Api.Services.CurrentUserService>());
 
-// Optional: register Redis multiplexer if configured
-var redisConn = builder.Configuration.GetSection("Redis")["ConnectionString"];
-if (!string.IsNullOrEmpty(redisConn))
-{
-    var mux = StackExchange.Redis.ConnectionMultiplexer.Connect(redisConn);
-    builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(mux);
-}
+// Redis removed — use in-memory behaviors by default
 
 // Register Application services (MediatR, validators, behaviors, AutoMapper)
 builder.Services.AddApplicationServices(Assembly.Load("PGB.Auth.Application"));
@@ -65,32 +57,7 @@ builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 // Register SecuritySettings (tạm dùng default, hoặc bind từ configuration nếu bạn có cấu hình)
 builder.Services.AddSingleton(SecuritySettings.Default());
 
-// Configure JWT
-var jwtSection = builder.Configuration.GetSection("JwtSettings");
-var secret = jwtSection["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
-var key = Encoding.ASCII.GetBytes(secret);
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.RequireHttpsMetadata = false; // true in production
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = true,
-        ValidIssuer = jwtSection["Issuer"],
-        ValidateAudience = true,
-        ValidAudience = jwtSection["Audience"],
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-    };
-});
+// JWT validation removed from Auth API — handled by API Gateway
 
 var app = builder.Build();
 

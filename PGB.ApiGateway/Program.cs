@@ -1,6 +1,8 @@
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Ocelot.DependencyInjection;
+using Ocelot.Middleware;
 
 namespace PGB.ApiGateway
 {
@@ -9,6 +11,12 @@ namespace PGB.ApiGateway
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // load ocelot configuration
+            builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
+            {
+                config.AddJsonFile("ocelot.json", optional: true, reloadOnChange: true);
+            });
 
             // Add services to the container.
 
@@ -45,6 +53,9 @@ namespace PGB.ApiGateway
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // Ocelot (API Gateway) services
+            builder.Services.AddOcelot(builder.Configuration);
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -61,6 +72,14 @@ namespace PGB.ApiGateway
 
 
             app.MapControllers();
+
+            // Use Ocelot middleware to proxy requests (ensure authentication runs before Ocelot)
+            app.Use(async (context, next) =>
+            {
+                await next();
+            });
+
+            app.UseOcelot().GetAwaiter().GetResult();
 
             app.Run();
         }
