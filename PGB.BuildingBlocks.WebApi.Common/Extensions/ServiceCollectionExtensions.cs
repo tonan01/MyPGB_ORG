@@ -11,20 +11,15 @@ namespace PGB.BuildingBlocks.WebApi.Common.Extensions
         {
             services.AddScoped<GlobalExceptionFilter>();
             services.AddMemoryCache();
-            services.Configure<PGB.BuildingBlocks.WebApi.Common.Models.RateLimitOptions>(config => { });
-            // RedisRateLimitStore is registered by the host if Redis is enabled; default is in-memory limiter.
+            // RateLimitOptions configuration removed per project request.
+            // RedisRateLimitStore is registered by the host if Redis is enabled.
             return services;
         }
 
         public static WebApplicationBuilder AddWebApiCommon(this WebApplicationBuilder builder)
         {
             builder.Services.AddWebApiCommon();
-            // bind RateLimitOptions from configuration section "RateLimiting" if present
-            var section = builder.Configuration.GetSection("RateLimiting");
-            if (section != null && section.Value != null)
-            {
-                builder.Services.Configure<PGB.BuildingBlocks.WebApi.Common.Models.RateLimitOptions>(section);
-            }
+            // Rate limiting configuration section removed per project request.
             return builder;
         }
     }
