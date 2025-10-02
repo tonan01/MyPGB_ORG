@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Ocelot.DependencyInjection;
@@ -12,15 +11,12 @@ namespace PGB.ApiGateway
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // load ocelot configuration
-            builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
-            {
-                config.AddJsonFile("ocelot.json", optional: true, reloadOnChange: true);
-            });
+            // Load ocelot configuration
+            builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
             // Add services to the container.
-
             builder.Services.AddControllers();
+
             // JWT authentication for gateway
             var jwtSection = builder.Configuration.GetSection("JwtSettings");
             var secret = jwtSection["SecretKey"] ?? throw new InvalidOperationException("JwtSettings:SecretKey not configured");
@@ -28,29 +24,29 @@ namespace PGB.ApiGateway
             var audience = jwtSection["Audience"] ?? "PGB_ORG_Users";
 
             var key = System.Text.Encoding.UTF8.GetBytes(secret);
-            // Use named scheme 'JwtBearer' and set it as the default to match ocelot configuration
+
             builder.Services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = "JwtBearer";
-                options.DefaultChallengeScheme = "JwtBearer";
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer("JwtBearer", options =>
             {
                 options.RequireHttpsMetadata = false;
                 options.SaveToken = true;
-                options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
                     ValidIssuer = issuer,
                     ValidateAudience = true,
                     ValidAudience = audience,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
-                    ValidateLifetime = true
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
                 };
             });
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -66,20 +62,14 @@ namespace PGB.ApiGateway
                 app.UseSwaggerUI();
             }
 
-            // If you want only HTTP on local dev, you can remove or comment out UseHttpsRedirection
-            // app.UseHttpsRedirection();
-
-            app.UseRouting();
+            // IMPORTANT: Do NOT use UseRouting() with Ocelot
+            // Ocelot handles routing internally
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-
-            app.MapControllers();
-
-            // Use Ocelot middleware to proxy requests (ensure authentication runs before Ocelot)
-            // Start Ocelot after routing and auth middleware
-            app.UseOcelot().GetAwaiter().GetResult();
+            // Use Ocelot middleware - this MUST be last
+            app.UseOcelot().Wait();
 
             app.Run();
         }
