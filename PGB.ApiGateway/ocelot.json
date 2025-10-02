@@ -1,7 +1,9 @@
 {
   "Routes": [
-    // --- AUTH SERVICE ROUTES (giữ nguyên) ---
+    // --- AUTH SERVICE ROUTES (PUBLIC) ---
     {
+      "UpstreamPathTemplate": "/api/auth/register",
+      "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/auth/register",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
@@ -10,11 +12,11 @@
           "Port": 7001
         }
       ],
-      "UpstreamPathTemplate": "/api/auth/register",
-      "UpstreamHttpMethod": [ "POST" ],
       "Priority": 1
     },
     {
+      "UpstreamPathTemplate": "/api/auth/login",
+      "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/auth/login",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
@@ -23,11 +25,11 @@
           "Port": 7001
         }
       ],
-      "UpstreamPathTemplate": "/api/auth/login",
-      "UpstreamHttpMethod": [ "POST" ],
       "Priority": 1
     },
     {
+      "UpstreamPathTemplate": "/api/auth/refresh",
+      "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/auth/refresh",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
@@ -36,47 +38,11 @@
           "Port": 7001
         }
       ],
-      "UpstreamPathTemplate": "/api/auth/refresh",
-      "UpstreamHttpMethod": [ "POST" ],
       "Priority": 1
     },
     {
-      "DownstreamPathTemplate": "/api/auth/{everything}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7001
-        }
-      ],
-      "UpstreamPathTemplate": "/api/auth/{everything}",
-      "UpstreamHttpMethod": [ "POST", "GET" ],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
-      "AddHeadersToRequest": {
-        "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
-        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
-      },
-      "Priority": 1
-    },
-    {
-      "DownstreamPathTemplate": "/api/user/{everything}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7001
-        }
-      ],
-      "UpstreamPathTemplate": "/api/user/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
-      "AddHeadersToRequest": {
-        "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
-        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
-      },
-      "Priority": 2
-    },
-    {
+      "UpstreamPathTemplate": "/auth-swagger/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/swagger/{everything}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
@@ -85,14 +51,50 @@
           "Port": 7001
         }
       ],
-      "UpstreamPathTemplate": "/auth-swagger/{everything}",
-      "UpstreamHttpMethod": [ "GET" ],
       "Priority": 1
     },
 
-    // --- TODO SERVICE ROUTES (ĐÃ SỬA LỖI VÀ TÁCH RA) ---
+    // --- USER & AUTH PROTECTED ROUTES (ĐÃ SỬA LỖI) ---
+    // Route này xử lý /api/users/me, /api/users/123-abc, /api/auth/logout, etc.
+    {
+      "UpstreamPathTemplate": "/api/users/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/users/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
+      "AddHeadersToRequest": {
+        "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
+      },
+      "Priority": 2
+    },
+    // Route này chỉ xử lý GET /api/users (lấy danh sách)
+    {
+      "UpstreamPathTemplate": "/api/users",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/users",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
+      "AddHeadersToRequest": {
+        "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
+      },
+      "Priority": 2
+    },
 
-    // Route này xử lý các request có tham số: GET /api/todos/abc, PUT /api/todos/123, ...
+    // --- TODO SERVICE ROUTES ---
     {
       "UpstreamPathTemplate": "/api/todos/{everything}",
       "UpstreamHttpMethod": [ "GET", "PUT", "DELETE" ],
@@ -110,7 +112,6 @@
         "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
       }
     },
-    // Route này chỉ xử lý các request đến gốc: GET /api/todos, POST /api/todos
     {
       "UpstreamPathTemplate": "/api/todos",
       "UpstreamHttpMethod": [ "GET", "POST" ],

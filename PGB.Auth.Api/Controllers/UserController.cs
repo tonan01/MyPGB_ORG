@@ -1,8 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PGB.Auth.Application.Commands; // THÊM USING NÀY
+using PGB.Auth.Application.Commands;
 using PGB.Auth.Application.Queries;
+using PGB.BuildingBlocks.Application.Models;
 using PGB.BuildingBlocks.Domain.Common;
 using System;
 using System.Security.Claims;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 namespace PGB.Auth.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/users")]
     [Authorize]
     public class UserController : ControllerBase
     {
@@ -28,7 +29,7 @@ namespace PGB.Auth.Api.Controllers
         /// Gets the profile of the currently logged-in user.
         /// </summary>
         [HttpGet("me")]
-        public async Task<ActionResult> Me()
+        public async Task<ActionResult<UserDto>> Me()
         {
             var userId = GetCurrentUserId();
             var query = new GetUserByIdQuery(userId);
@@ -40,11 +41,9 @@ namespace PGB.Auth.Api.Controllers
                 Data = user,
                 CorrelationId = HttpContext.TraceIdentifier
             };
-
             return Ok(response);
         }
 
-        // --- PHẦN MỚI: ENDPOINT ĐỂ USER TỰ CẬP NHẬT PROFILE ---
         /// <summary>
         /// Updates the profile of the currently logged-in user.
         /// </summary>
@@ -53,31 +52,34 @@ namespace PGB.Auth.Api.Controllers
         {
             command.UserId = GetCurrentUserId();
             await _mediator.Send(command);
-            return NoContent(); // 204 No Content
+            return NoContent();
         }
-        // --- KẾT THÚC PHẦN MỚI ---
-
 
         /// <summary>
-        /// Gets a list of all users. (Admin/Manager only)
+        /// Gets a paged list of all users. (Admin/Manager only)
         /// </summary>
-        [HttpGet("all")]
+        [HttpGet] //
         [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Manager}")]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<ActionResult<PagedResult<UserDto>>> GetAllUsers([FromQuery] GetUsersQuery query)
         {
-            // Logic lấy tất cả user sẽ được hoàn thiện sau
-            return Ok(new { message = $"Action executed by user with roles: {string.Join(", ", User.FindAll(ClaimTypes.Role).Select(c => c.Value))}" });
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
 
         /// <summary>
-        /// Deletes a user. (Admin only)
+        /// Deletes a user by ID. (Admin only)
         /// </summary>
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:guid}")]
         [Authorize(Roles = AppRoles.Admin)]
-        public IActionResult DeleteUser(Guid id)
+        public async Task<IActionResult> DeleteUser(Guid id)
         {
-            // Logic để xóa người dùng sẽ được hoàn thiện sau
-            return Ok(new { message = $"User {id} has been deleted by an Admin." });
+            var command = new DeleteUserCommand
+            {
+                Id = id,
+                UserId = GetCurrentUserId() // Ghi nhận ai là người thực hiện xóa
+            };
+            await _mediator.Send(command);
+            return NoContent();
         }
     }
 }
