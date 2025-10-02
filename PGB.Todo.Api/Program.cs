@@ -1,36 +1,56 @@
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using PGB.BuildingBlocks.Application.Extensions;
+using PGB.BuildingBlocks.WebApi.Common.Extensions;
+using PGB.Todo.Application.Interfaces;
+using PGB.Todo.Infrastructure.Persistence;
+using PGB.Todo.Infrastructure.Repositories;
+using System.Reflection;
 
-namespace PGB.Todo.Api
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services
+builder.AddWebApiCommon();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Cấu hình Authentication & Authorization
+builder.Services.AddAuthentication(options =>
 {
-    public class Program
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer();
+builder.Services.AddAuthorization();
+
+// Đăng ký các dịch vụ của tầng Application (MediatR, AutoMapper)
+builder.Services.AddApplicationServices(Assembly.Load("PGB.Todo.Application"));
+
+// Đăng ký DbContext
+var conn = builder.Configuration.GetConnectionString("DefaultConnection")
+          ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
+builder.Services.AddDbContext<TodoDbContext>(options =>
+    options.UseSqlServer(conn, sql =>
     {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        sql.MigrationsAssembly("PGB.Todo.Infrastructure");
+    }));
 
-            // Add services to the container.
+// Đăng ký Repository
+builder.Services.AddScoped<ITodoRepository, TodoRepository>();
 
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+var app = builder.Build();
 
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
-
-            app.MapControllers();
-
-            app.Run();
-        }
-    }
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+// Thêm các middleware
+app.UseWebApiCommon();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();

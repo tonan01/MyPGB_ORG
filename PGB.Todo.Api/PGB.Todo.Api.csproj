@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PGB.BuildingBlocks.WebApi.Common\PGB.BuildingBlocks.WebApi.Common.csproj" />
     <ProjectReference Include="..\PGB.Todo.Application\PGB.Todo.Application.csproj" />
     <ProjectReference Include="..\PGB.Todo.Infrastructure\PGB.Todo.Infrastructure.csproj" />
   </ItemGroup>
