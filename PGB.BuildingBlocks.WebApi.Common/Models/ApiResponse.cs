@@ -10,8 +10,6 @@ namespace PGB.BuildingBlocks.WebApi.Common.Models
         public string Message { get; set; } = "Operation completed successfully";
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public string CorrelationId { get; set; } = string.Empty;
-        public string Version { get; set; } = "v1";
-        public RateLimitInfo? RateLimit { get; set; }
     }
 
     public class ApiErrorResponse
@@ -20,7 +18,6 @@ namespace PGB.BuildingBlocks.WebApi.Common.Models
         public ApiError Error { get; set; } = new ApiError();
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public string CorrelationId { get; set; } = string.Empty;
-        public string Version { get; set; } = "v1";
     }
 
     public class ApiError
@@ -36,13 +33,6 @@ namespace PGB.BuildingBlocks.WebApi.Common.Models
     {
         public string Field { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
-    }
-
-    public class RateLimitInfo
-    {
-        public int Limit { get; set; }
-        public int Remaining { get; set; }
-        public DateTime ResetTime { get; set; }
     }
 }
 

@@ -7,7 +7,6 @@ namespace PGB.Auth.Api.Models
     public class ApiErrorResponse : PGB.BuildingBlocks.WebApi.Common.Models.ApiErrorResponse { }
     public class ApiError : PGB.BuildingBlocks.WebApi.Common.Models.ApiError { }
     public class FieldError : PGB.BuildingBlocks.WebApi.Common.Models.FieldError { }
-    public class RateLimitInfo : PGB.BuildingBlocks.WebApi.Common.Models.RateLimitInfo { }
 }
 
 
