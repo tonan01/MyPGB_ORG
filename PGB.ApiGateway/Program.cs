@@ -10,8 +10,7 @@ namespace PGB.ApiGateway
     {
         public static void Main(string[] args)
         {
-            // BỎ DÒNG SAU ĐI:
-            // JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            // BỎ HOÀN TOÀN DÒNG JwtSecurityTokenHandler... ĐI
 
             var builder = WebApplication.CreateBuilder(args);
 

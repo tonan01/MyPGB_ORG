@@ -53,7 +53,7 @@
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
       "AddHeadersToRequest": {
         "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
-        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role]"
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
       },
       "Priority": 1
     },
@@ -71,7 +71,7 @@
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
       "AddHeadersToRequest": {
         "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
-        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role]"
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
       },
       "Priority": 2
     },
