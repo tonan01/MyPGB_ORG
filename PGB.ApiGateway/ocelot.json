@@ -1,5 +1,6 @@
 {
   "Routes": [
+    // --- AUTH SERVICE ROUTES ---
     {
       "DownstreamPathTemplate": "/api/auth/register",
       "DownstreamScheme": "https",
@@ -87,6 +88,27 @@
       "UpstreamPathTemplate": "/auth-swagger/{everything}",
       "UpstreamHttpMethod": [ "GET" ],
       "Priority": 1
+    },
+
+    // --- TODO SERVICE ROUTE (ĐÃ SỬA LỖI) ---
+    {
+      "UpstreamPathTemplate": "/api/todos/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/todos/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "JwtBearer"
+      },
+      "AddHeadersToRequest": {
+        "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
+      }
     }
   ],
   "GlobalConfiguration": {
