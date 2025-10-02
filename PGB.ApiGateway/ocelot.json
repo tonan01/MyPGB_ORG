@@ -40,7 +40,7 @@
       "Priority": 1
     },
     {
-      "DownstreamPathTemplate": "/api/auth/logout",
+      "DownstreamPathTemplate": "/api/auth/{everything}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -48,33 +48,9 @@
           "Port": 7001
         }
       ],
-      "UpstreamPathTemplate": "/api/auth/logout",
-      "UpstreamHttpMethod": [ "POST" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "JwtBearer",
-        "AllowedScopes": []
-      },
-      "AddHeadersToRequest": {
-        "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
-        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role]"
-      },
-      "Priority": 1
-    },
-    {
-      "DownstreamPathTemplate": "/api/auth/logout-all",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7001
-        }
-      ],
-      "UpstreamPathTemplate": "/api/auth/logout-all",
-      "UpstreamHttpMethod": [ "POST" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "JwtBearer",
-        "AllowedScopes": []
-      },
+      "UpstreamPathTemplate": "/api/auth/{everything}",
+      "UpstreamHttpMethod": [ "POST", "GET" ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
       "AddHeadersToRequest": {
         "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
         "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role]"
@@ -92,10 +68,7 @@
       ],
       "UpstreamPathTemplate": "/api/user/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "JwtBearer",
-        "AllowedScopes": []
-      },
+      "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
       "AddHeadersToRequest": {
         "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
         "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role]"
