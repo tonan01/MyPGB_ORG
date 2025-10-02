@@ -6,10 +6,6 @@ using System;
 
 namespace PGB.BuildingBlocks.WebApi.Common.Middleware
 {
-    /// <summary>
-    /// Middleware to construct a ClaimsPrincipal from headers forwarded by the API Gateway.
-    /// This allows downstream services to use standard [Authorize] attributes.
-    /// </summary>
     public class UserClaimsMiddleware
     {
         private readonly RequestDelegate _next;
@@ -21,17 +17,14 @@ namespace PGB.BuildingBlocks.WebApi.Common.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Check for the User-Id header forwarded by the gateway
             if (context.Request.Headers.TryGetValue("X-User-Id", out var userIdValue) &&
                 !string.IsNullOrEmpty(userIdValue))
             {
-                // Create a list of claims, starting with the user's ID
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, userIdValue.ToString())
                 };
 
-                // Check for the User-Roles header and add role claims
                 if (context.Request.Headers.TryGetValue("X-User-Roles", out var userRolesValue) &&
                     !string.IsNullOrEmpty(userRolesValue))
                 {
@@ -45,7 +38,6 @@ namespace PGB.BuildingBlocks.WebApi.Common.Middleware
                     }
                 }
 
-                // Create a new ClaimsIdentity and replace the existing HttpContext.User
                 var identity = new ClaimsIdentity(claims, "GatewayAuthentication");
                 context.User = new ClaimsPrincipal(identity);
             }

@@ -9,16 +9,14 @@ namespace PGB.BuildingBlocks.WebApi.Common.Extensions
         public static IApplicationBuilder UseWebApiCommon(this IApplicationBuilder app)
         {
             app.UseMiddleware<CorrelationIdMiddleware>();
-            // Add the new UserClaimsMiddleware after CorrelationId
-            app.UseMiddleware<UserClaimsMiddleware>();
+            app.UseMiddleware<UserClaimsMiddleware>(); // <-- THÊM DÒNG NÀY
             return app;
         }
 
         public static WebApplication UseWebApiCommon(this WebApplication app)
         {
             app.UseMiddleware<CorrelationIdMiddleware>();
-            // Add the new UserClaimsMiddleware after CorrelationId
-            app.UseMiddleware<UserClaimsMiddleware>();
+            app.UseMiddleware<UserClaimsMiddleware>(); // <-- THÊM DÒNG NÀY
             return app;
         }
     }

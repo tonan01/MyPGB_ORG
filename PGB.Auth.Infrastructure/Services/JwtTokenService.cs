@@ -6,7 +6,8 @@ using PGB.Auth.Application.Services;
 using PGB.Auth.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
+using System.Collections.Generic; // Thêm using này
+using System.Linq; // Thêm using này
 
 namespace PGB.Auth.Infrastructure.Services
 {
@@ -40,7 +41,6 @@ namespace PGB.Auth.Infrastructure.Services
             var key = Encoding.ASCII.GetBytes(_secretKey);
             var expiresAt = DateTime.UtcNow.AddMinutes(_expirationMinutes);
 
-            // Create a list to hold all claims
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -48,24 +48,25 @@ namespace PGB.Auth.Infrastructure.Services
                 new Claim(ClaimTypes.Email, user.EmailValue),
                 new Claim("FullName", user.DisplayName),
                 new Claim("IsEmailVerified", user.IsEmailVerified.ToString()),
-                new Claim("jti", Guid.NewGuid().ToString()) // JWT ID
+                new Claim("jti", Guid.NewGuid().ToString())
             };
 
             // --- PHẦN CẬP NHẬT ---
-            // Add role claims from the user entity
-            // Giả sử user.Roles là một ICollection<string>
-            if (user.Roles != null)
+            // Lấy danh sách tên Role từ navigation property và thêm vào claims
+            // Cần đảm bảo User được truy vấn kèm theo UserRoles và Role
+            if (user.UserRoles != null && user.UserRoles.Any())
             {
-                foreach (var role in user.Roles)
+                var roleNames = user.UserRoles.Select(ur => ur.Role.Name);
+                foreach (var roleName in roleNames)
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, role));
+                    claims.Add(new Claim(ClaimTypes.Role, roleName));
                 }
             }
             // --- KẾT THÚC CẬP NHẬT ---
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(claims), // Use the dynamic list of claims
+                Subject = new ClaimsIdentity(claims),
                 Expires = expiresAt,
                 Issuer = _issuer,
                 Audience = _audience,
@@ -83,7 +84,7 @@ namespace PGB.Auth.Infrastructure.Services
             };
         }
 
-        // ... (Các phương thức khác giữ nguyên) ...
+        // ... (Các phương thức khác giữ nguyên)
         #region Implementation
         public ClaimsPrincipal? ValidateToken(string token)
         {
