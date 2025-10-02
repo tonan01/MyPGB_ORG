@@ -6,6 +6,8 @@ using PGB.BuildingBlocks.Domain.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace PGB.Auth.Domain.Entities
 {
@@ -26,17 +28,9 @@ namespace PGB.Auth.Domain.Entities
 
         #region Navigation Properties
         public virtual ICollection<RefreshToken> RefreshTokens { get; private set; } = new List<RefreshToken>();
-
-        // --- PHẦN CẬP NHẬT ---
         public virtual ICollection<UserRole> UserRoles { get; private set; } = new List<UserRole>();
-
-        // Helper property to easily get role names for JWT
-        public IEnumerable<string> Roles => UserRoles.Select(ur => ur.Role.Name);
-        // --- KẾT THÚC CẬP NHẬT ---
-
         #endregion
 
-        // ... (Giữ nguyên toàn bộ Constructors, Factory Methods và các phương thức khác)
         #region Constructors
         protected User() { }
 
@@ -101,6 +95,18 @@ namespace PGB.Auth.Domain.Entities
         public bool VerifyPassword(string plainPassword, IPasswordHasher passwordHasher)
         {
             return PasswordHash.Verify(plainPassword, passwordHasher);
+        }
+        #endregion
+
+        #region Role Management
+        public void AddRole(Role role, string createdBy)
+        {
+            // Kiểm tra xem user đã có vai trò này chưa
+            if (!UserRoles.Any(ur => ur.RoleId == role.Id))
+            {
+                UserRoles.Add(new UserRole(this.Id, role.Id));
+                // Có thể raise một domain event ở đây nếu cần
+            }
         }
         #endregion
 

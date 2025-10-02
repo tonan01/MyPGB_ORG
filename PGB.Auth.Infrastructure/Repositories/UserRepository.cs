@@ -4,7 +4,11 @@ using PGB.Auth.Application.Repositories;
 using PGB.Auth.Application.Queries;
 using PGB.Auth.Infrastructure.Data;
 using PGB.BuildingBlocks.Application.Models;
-using System.Linq; // Thêm using này
+using System.Threading.Tasks;
+using System.Threading;
+using System;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace PGB.Auth.Infrastructure.Repositories
 {
@@ -22,8 +26,8 @@ namespace PGB.Auth.Infrastructure.Repositories
         {
             return await _context.Users
                 .Include(u => u.RefreshTokens)
-                .Include(u => u.UserRoles) // <-- THÊM DÒNG NÀY
-                    .ThenInclude(ur => ur.Role) // <-- VÀ DÒNG NÀY
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         }
 
@@ -31,8 +35,8 @@ namespace PGB.Auth.Infrastructure.Repositories
         {
             return await _context.Users
                 .Include(u => u.RefreshTokens)
-                .Include(u => u.UserRoles) // <-- THÊM DÒNG NÀY
-                    .ThenInclude(ur => ur.Role) // <-- VÀ DÒNG NÀY
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Username.Value == username.ToLowerInvariant(), cancellationToken);
         }
 
@@ -40,8 +44,8 @@ namespace PGB.Auth.Infrastructure.Repositories
         {
             return await _context.Users
                 .Include(u => u.RefreshTokens)
-                .Include(u => u.UserRoles) // <-- THÊM DÒNG NÀY
-                    .ThenInclude(ur => ur.Role) // <-- VÀ DÒNG NÀY
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Email.Value == email.ToLowerInvariant(), cancellationToken);
         }
 
@@ -63,7 +67,13 @@ namespace PGB.Auth.Infrastructure.Repositories
         }
         #endregion
 
-        // ... (Giữ nguyên các phương thức còn lại: GetAllAsync, GetPagedAsync, GetRefreshTokenAsync, ExistsBy..., SaveChangesAsync)
+        #region Role Operations
+        public async Task<Role?> GetRoleByNameAsync(string roleName, CancellationToken cancellationToken = default)
+        {
+            return await _context.Roles
+                .FirstOrDefaultAsync(r => r.Name == roleName, cancellationToken);
+        }
+        #endregion
 
         #region Query Operations
         public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -76,10 +86,8 @@ namespace PGB.Auth.Infrastructure.Repositories
         public async Task<PagedResult<User>> GetPagedAsync(GetUsersQuery query, CancellationToken cancellationToken = default)
         {
             query.ValidateAndNormalize();
-
             var queryable = _context.Users.AsQueryable();
 
-            // Apply filters
             if (query.IsActive.HasValue)
                 queryable = queryable.Where(u => u.IsActive == query.IsActive.Value);
 
@@ -101,7 +109,6 @@ namespace PGB.Auth.Infrastructure.Repositories
             if (query.CreatedTo.HasValue)
                 queryable = queryable.Where(u => u.CreatedAt <= query.CreatedTo.Value);
 
-            // Search
             if (!string.IsNullOrWhiteSpace(query.SearchTerm))
             {
                 var searchTerm = query.SearchTerm.ToLowerInvariant();
@@ -112,26 +119,16 @@ namespace PGB.Auth.Infrastructure.Repositories
                     u.FullName.LastName.Contains(searchTerm));
             }
 
-            // Count total
             var totalCount = await queryable.CountAsync(cancellationToken);
 
-            // Apply sorting
             if (!string.IsNullOrWhiteSpace(query.SortBy))
             {
                 queryable = query.SortBy.ToLowerInvariant() switch
                 {
-                    "username" => query.SortDescending
-                        ? queryable.OrderByDescending(u => u.Username.Value)
-                        : queryable.OrderBy(u => u.Username.Value),
-                    "email" => query.SortDescending
-                        ? queryable.OrderByDescending(u => u.Email.Value)
-                        : queryable.OrderBy(u => u.Email.Value),
-                    "fullname" => query.SortDescending
-                        ? queryable.OrderByDescending(u => u.FullName.FirstName).ThenByDescending(u => u.FullName.LastName)
-                        : queryable.OrderBy(u => u.FullName.FirstName).ThenBy(u => u.FullName.LastName),
-                    "createdat" => query.SortDescending
-                        ? queryable.OrderByDescending(u => u.CreatedAt)
-                        : queryable.OrderBy(u => u.CreatedAt),
+                    "username" => query.SortDescending ? queryable.OrderByDescending(u => u.Username.Value) : queryable.OrderBy(u => u.Username.Value),
+                    "email" => query.SortDescending ? queryable.OrderByDescending(u => u.Email.Value) : queryable.OrderBy(u => u.Email.Value),
+                    "fullname" => query.SortDescending ? queryable.OrderByDescending(u => u.FullName.FirstName).ThenByDescending(u => u.FullName.LastName) : queryable.OrderBy(u => u.FullName.FirstName).ThenBy(u => u.FullName.LastName),
+                    "createdat" => query.SortDescending ? queryable.OrderByDescending(u => u.CreatedAt) : queryable.OrderBy(u => u.CreatedAt),
                     _ => queryable.OrderBy(u => u.Username.Value)
                 };
             }
@@ -140,7 +137,6 @@ namespace PGB.Auth.Infrastructure.Repositories
                 queryable = queryable.OrderBy(u => u.Username.Value);
             }
 
-            // Apply pagination
             var users = await queryable
                 .Skip((query.Page - 1) * query.PageSize)
                 .Take(query.PageSize)
@@ -180,9 +176,8 @@ namespace PGB.Auth.Infrastructure.Repositories
             {
                 return await _context.SaveChangesAsync(cancellationToken);
             }
-            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
+            catch (DbUpdateConcurrencyException)
             {
-                // First attempt failed due to concurrency - try to reload conflicting entries and retry once
                 var entries = _context.ChangeTracker.Entries()
                     .Where(e => e.State == EntityState.Modified || e.State == EntityState.Deleted || e.State == EntityState.Added)
                     .ToList();
@@ -203,9 +198,8 @@ namespace PGB.Auth.Infrastructure.Repositories
                 {
                     return await _context.SaveChangesAsync(cancellationToken);
                 }
-                catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex2)
+                catch (DbUpdateConcurrencyException ex2)
                 {
-                    // Still failing - wrap and surface as application concurrency error
                     throw new PGB.BuildingBlocks.Application.Exceptions.ConcurrencyException("Concurrency conflict detected while saving changes.", ex2);
                 }
             }

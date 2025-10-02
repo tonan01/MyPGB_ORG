@@ -1,10 +1,13 @@
 ﻿using PGB.Auth.Application.Queries;
 using PGB.Auth.Domain.Entities;
 using PGB.BuildingBlocks.Application.Models;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PGB.Auth.Application.Repositories
 {
-    #region User Repository Interface
     public interface IUserRepository
     {
         #region Methods
@@ -28,8 +31,10 @@ namespace PGB.Auth.Application.Repositories
 
         // Existence checks
         Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default);
-        Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default); 
+        Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default);
+
+        // Role operations
+        Task<Role?> GetRoleByNameAsync(string roleName, CancellationToken cancellationToken = default);
         #endregion
     }
-    #endregion
 }
