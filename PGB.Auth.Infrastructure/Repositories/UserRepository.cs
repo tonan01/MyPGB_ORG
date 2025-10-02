@@ -4,28 +4,26 @@ using PGB.Auth.Application.Repositories;
 using PGB.Auth.Application.Queries;
 using PGB.Auth.Infrastructure.Data;
 using PGB.BuildingBlocks.Application.Models;
+using System.Linq; // Thêm using này
 
 namespace PGB.Auth.Infrastructure.Repositories
 {
-    #region User Repository Implementation
     public class UserRepository : IUserRepository
     {
-        #region Dependencies
         private readonly AuthDbContext _context;
-        #endregion
 
-        #region Constructor
         public UserRepository(AuthDbContext context)
         {
             _context = context;
         }
-        #endregion
 
         #region Basic CRUD Operations
         public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _context.Users
                 .Include(u => u.RefreshTokens)
+                .Include(u => u.UserRoles) // <-- THÊM DÒNG NÀY
+                    .ThenInclude(ur => ur.Role) // <-- VÀ DÒNG NÀY
                 .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         }
 
@@ -33,6 +31,8 @@ namespace PGB.Auth.Infrastructure.Repositories
         {
             return await _context.Users
                 .Include(u => u.RefreshTokens)
+                .Include(u => u.UserRoles) // <-- THÊM DÒNG NÀY
+                    .ThenInclude(ur => ur.Role) // <-- VÀ DÒNG NÀY
                 .FirstOrDefaultAsync(u => u.Username.Value == username.ToLowerInvariant(), cancellationToken);
         }
 
@@ -40,6 +40,8 @@ namespace PGB.Auth.Infrastructure.Repositories
         {
             return await _context.Users
                 .Include(u => u.RefreshTokens)
+                .Include(u => u.UserRoles) // <-- THÊM DÒNG NÀY
+                    .ThenInclude(ur => ur.Role) // <-- VÀ DÒNG NÀY
                 .FirstOrDefaultAsync(u => u.Email.Value == email.ToLowerInvariant(), cancellationToken);
         }
 
@@ -60,6 +62,8 @@ namespace PGB.Auth.Infrastructure.Repositories
             return Task.CompletedTask;
         }
         #endregion
+
+        // ... (Giữ nguyên các phương thức còn lại: GetAllAsync, GetPagedAsync, GetRefreshTokenAsync, ExistsBy..., SaveChangesAsync)
 
         #region Query Operations
         public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -208,5 +212,4 @@ namespace PGB.Auth.Infrastructure.Repositories
         }
         #endregion
     }
-    #endregion
 }
