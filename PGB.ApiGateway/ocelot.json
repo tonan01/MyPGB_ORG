@@ -1,78 +1,6 @@
 {
   "Routes": [
-    {
-      "DownstreamPathTemplate": "/api/auth/register",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7001
-        }
-      ],
-      "UpstreamPathTemplate": "/api/auth/register",
-      "UpstreamHttpMethod": [ "POST" ],
-      "Priority": 1
-    },
-    {
-      "DownstreamPathTemplate": "/api/auth/login",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7001
-        }
-      ],
-      "UpstreamPathTemplate": "/api/auth/login",
-      "UpstreamHttpMethod": [ "POST" ],
-      "Priority": 1
-    },
-    {
-      "DownstreamPathTemplate": "/api/auth/refresh",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7001
-        }
-      ],
-      "UpstreamPathTemplate": "/api/auth/refresh",
-      "UpstreamHttpMethod": [ "POST" ],
-      "Priority": 1
-    },
-    {
-      "DownstreamPathTemplate": "/api/auth/logout",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7001
-        }
-      ],
-      "UpstreamPathTemplate": "/api/auth/logout",
-      "UpstreamHttpMethod": [ "POST" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "JwtBearer",
-        "AllowedScopes": []
-      },
-      "Priority": 1
-    },
-    {
-      "DownstreamPathTemplate": "/api/auth/logout-all",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7001
-        }
-      ],
-      "UpstreamPathTemplate": "/api/auth/logout-all",
-      "UpstreamHttpMethod": [ "POST" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "JwtBearer",
-        "AllowedScopes": []
-      },
-      "Priority": 1
-    },
+    // ... các route public ...
     {
       "DownstreamPathTemplate": "/api/user/{everything}",
       "DownstreamScheme": "https",
@@ -88,10 +16,15 @@
         "AuthenticationProviderKey": "JwtBearer",
         "AllowedScopes": []
       },
+      "AddHeadersToRequest": {
+        "X-User-Id": "Claims[nameid] > value[0]",
+        "X-User-Roles": "Claims[role]"
+      },
       "Priority": 2
     },
+    // Áp dụng tương tự cho các route khác cần phân quyền
     {
-      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamPathTemplate": "/api/auth/logout",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -99,10 +32,19 @@
           "Port": 7001
         }
       ],
-      "UpstreamPathTemplate": "/auth-swagger/{everything}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamPathTemplate": "/api/auth/logout",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "JwtBearer",
+        "AllowedScopes": []
+      },
+      "AddHeadersToRequest": {
+        "X-User-Id": "Claims[nameid] > value[0]",
+        "X-User-Roles": "Claims[role]"
+      },
       "Priority": 1
     }
+    // ...
   ],
   "GlobalConfiguration": {
     "BaseUrl": "https://localhost:7000",

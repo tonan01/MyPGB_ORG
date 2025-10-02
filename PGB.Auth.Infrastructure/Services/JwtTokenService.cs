@@ -6,12 +6,13 @@ using PGB.Auth.Application.Services;
 using PGB.Auth.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 
 namespace PGB.Auth.Infrastructure.Services
 {
-    #region JWT Token Service Implementation
     public class JwtTokenService : IJwtTokenService
     {
+        // ... (Constructor và các dependencies giữ nguyên) ...
         #region Dependencies
         private readonly IConfiguration _configuration;
         private readonly ILogger<JwtTokenService> _logger;
@@ -33,24 +34,38 @@ namespace PGB.Auth.Infrastructure.Services
         }
         #endregion
 
-        #region Implementation
         public JwtToken GenerateAccessToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_secretKey);
             var expiresAt = DateTime.UtcNow.AddMinutes(_expirationMinutes);
 
+            // Create a list to hold all claims
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UsernameValue),
+                new Claim(ClaimTypes.Email, user.EmailValue),
+                new Claim("FullName", user.DisplayName),
+                new Claim("IsEmailVerified", user.IsEmailVerified.ToString()),
+                new Claim("jti", Guid.NewGuid().ToString()) // JWT ID
+            };
+
+            // --- PHẦN CẬP NHẬT ---
+            // Add role claims from the user entity
+            // Giả sử user.Roles là một ICollection<string>
+            if (user.Roles != null)
+            {
+                foreach (var role in user.Roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+            }
+            // --- KẾT THÚC CẬP NHẬT ---
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.UsernameValue),
-                    new Claim(ClaimTypes.Email, user.EmailValue),
-                    new Claim("FullName", user.DisplayName),
-                    new Claim("IsEmailVerified", user.IsEmailVerified.ToString()),
-                    new Claim("jti", Guid.NewGuid().ToString()) // JWT ID
-                }),
+                Subject = new ClaimsIdentity(claims), // Use the dynamic list of claims
                 Expires = expiresAt,
                 Issuer = _issuer,
                 Audience = _audience,
@@ -68,6 +83,8 @@ namespace PGB.Auth.Infrastructure.Services
             };
         }
 
+        // ... (Các phương thức khác giữ nguyên) ...
+        #region Implementation
         public ClaimsPrincipal? ValidateToken(string token)
         {
             try
@@ -105,5 +122,4 @@ namespace PGB.Auth.Infrastructure.Services
         }
         #endregion
     }
-    #endregion
 }

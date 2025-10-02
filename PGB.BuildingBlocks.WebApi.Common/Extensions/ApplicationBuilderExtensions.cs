@@ -9,16 +9,17 @@ namespace PGB.BuildingBlocks.WebApi.Common.Extensions
         public static IApplicationBuilder UseWebApiCommon(this IApplicationBuilder app)
         {
             app.UseMiddleware<CorrelationIdMiddleware>();
+            // Add the new UserClaimsMiddleware after CorrelationId
+            app.UseMiddleware<UserClaimsMiddleware>();
             return app;
         }
 
         public static WebApplication UseWebApiCommon(this WebApplication app)
         {
             app.UseMiddleware<CorrelationIdMiddleware>();
-            // Rate limiting removed per project configuration (was previously added here).
+            // Add the new UserClaimsMiddleware after CorrelationId
+            app.UseMiddleware<UserClaimsMiddleware>();
             return app;
         }
     }
 }
-
-

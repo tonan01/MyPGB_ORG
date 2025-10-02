@@ -5,9 +5,9 @@ using MediatR;
 
 namespace PGB.Auth.Infrastructure.Data
 {
-    #region Auth DbContext
     public class AuthDbContext : BaseDbContext
     {
+        // ... (Constructor giữ nguyên) ...
         #region Constructor
         public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options)
         {
@@ -22,6 +22,12 @@ namespace PGB.Auth.Infrastructure.Data
         #region DbSets
         public DbSet<User> Users { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+        // --- PHẦN CẬP NHẬT ---
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
+        // --- KẾT THÚC CẬP NHẬT ---
+
         #endregion
 
         #region Model Configuration
@@ -29,9 +35,10 @@ namespace PGB.Auth.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // User Configuration với Value Objects
+            // User Configuration (giữ nguyên)
             modelBuilder.Entity<User>(entity =>
             {
+                // ... (giữ nguyên tất cả cấu hình của User)
                 entity.HasKey(e => e.Id);
 
                 // Username Value Object
@@ -106,9 +113,10 @@ namespace PGB.Auth.Infrastructure.Data
                 entity.HasIndex(e => e.IsDeleted).HasDatabaseName("IX_Users_IsDeleted");
             });
 
-            // RefreshToken Configuration
+            // RefreshToken Configuration (giữ nguyên)
             modelBuilder.Entity<RefreshToken>(entity =>
             {
+                // ... (giữ nguyên cấu hình của RefreshToken)
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Token).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.UserId).IsRequired();
@@ -123,8 +131,31 @@ namespace PGB.Auth.Infrastructure.Data
                 entity.HasIndex(e => e.ExpiresAt).HasDatabaseName("IX_RefreshTokens_ExpiresAt");
                 entity.HasIndex(e => e.IsDeleted).HasDatabaseName("IX_RefreshTokens_IsDeleted");
             });
+
+            // --- PHẦN CẬP NHẬT MỚI ---
+            modelBuilder.Entity<Role>(entity =>
+            {
+                entity.HasKey(r => r.Id);
+                entity.Property(r => r.Name).IsRequired().HasMaxLength(50);
+                entity.HasIndex(r => r.Name).IsUnique(); // Đảm bảo tên Role là duy nhất
+            });
+
+            modelBuilder.Entity<UserRole>(entity =>
+            {
+                entity.HasKey(ur => new { ur.UserId, ur.RoleId }); // Khóa chính kết hợp
+
+                entity.HasOne(ur => ur.User)
+                    .WithMany(u => u.UserRoles)
+                    .HasForeignKey(ur => ur.UserId)
+                    .IsRequired();
+
+                entity.HasOne(ur => ur.Role)
+                    .WithMany(r => r.UserRoles)
+                    .HasForeignKey(ur => ur.RoleId)
+                    .IsRequired();
+            });
+            // --- KẾT THÚC CẬP NHẬT MỚI ---
         }
         #endregion
     }
-    #endregion
 }
