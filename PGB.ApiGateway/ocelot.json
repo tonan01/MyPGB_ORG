@@ -54,8 +54,7 @@
       "Priority": 1
     },
 
-    // --- USER & AUTH PROTECTED ROUTES (ĐÃ SỬA LỖI) ---
-    // Route này xử lý /api/users/me, /api/users/123-abc, /api/auth/logout, etc.
+    // --- USER & AUTH PROTECTED ROUTES ---
     {
       "UpstreamPathTemplate": "/api/users/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
@@ -74,7 +73,6 @@
       },
       "Priority": 2
     },
-    // Route này chỉ xử lý GET /api/users (lấy danh sách)
     {
       "UpstreamPathTemplate": "/api/users",
       "UpstreamHttpMethod": [ "GET" ],
@@ -121,6 +119,25 @@
         {
           "Host": "localhost",
           "Port": 7002
+        }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
+      "AddHeadersToRequest": {
+        "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
+      }
+    },
+
+    // --- CHAT SERVICE ROUTES ---
+    {
+      "UpstreamPathTemplate": "/api/chat/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/chat/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7003
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },

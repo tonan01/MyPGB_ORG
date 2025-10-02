@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="MediatR" Version="12.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
@@ -22,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PGB.BuildingBlocks.WebApi.Common\PGB.BuildingBlocks.WebApi.Common.csproj" />
     <ProjectReference Include="..\PGB.Chat.Application\PGB.Chat.Application.csproj" />
     <ProjectReference Include="..\PGB.Chat.Infrastructure\PGB.Chat.Infrastructure.csproj" />
   </ItemGroup>
