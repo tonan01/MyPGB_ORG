@@ -1,6 +1,6 @@
 {
   "Routes": [
-    // --- AUTH SERVICE ROUTES ---
+    // --- AUTH SERVICE ROUTES (giữ nguyên) ---
     {
       "DownstreamPathTemplate": "/api/auth/register",
       "DownstreamScheme": "https",
@@ -90,10 +90,12 @@
       "Priority": 1
     },
 
-    // --- TODO SERVICE ROUTE (ĐÃ SỬA LỖI) ---
+    // --- TODO SERVICE ROUTES (ĐÃ SỬA LỖI VÀ TÁCH RA) ---
+
+    // Route này xử lý các request có tham số: GET /api/todos/abc, PUT /api/todos/123, ...
     {
       "UpstreamPathTemplate": "/api/todos/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [ "GET", "PUT", "DELETE" ],
       "DownstreamPathTemplate": "/api/todos/{everything}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
@@ -102,9 +104,25 @@
           "Port": 7002
         }
       ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "JwtBearer"
-      },
+      "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
+      "AddHeadersToRequest": {
+        "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
+      }
+    },
+    // Route này chỉ xử lý các request đến gốc: GET /api/todos, POST /api/todos
+    {
+      "UpstreamPathTemplate": "/api/todos",
+      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "DownstreamPathTemplate": "/api/todos",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
       "AddHeadersToRequest": {
         "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
         "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
