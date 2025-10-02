@@ -1,9 +1,8 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PGB.BuildingBlocks.Domain.Common;
-using PGB.Todo.Application.Commands; // CẬP NHẬT NAMESPACE
-using PGB.Todo.Application.Queries; // CẬP NHẬT NAMESPACE
+using PGB.Todo.Application.Commands;
+using PGB.Todo.Application.Queries;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -39,5 +38,36 @@ namespace PGB.Todo.Api.Controllers
             var result = await _mediator.Send(command);
             return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
         }
+
+        // --- PHẦN MỚI: ENDPOINT SỬA ---
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTodoItemCommand command)
+        {
+            if (id != command.Id)
+            {
+                return BadRequest("ID in URL and body do not match.");
+            }
+
+            command.UserId = GetCurrentUserId();
+            await _mediator.Send(command);
+            return NoContent(); // 204 No Content là response thành công cho một request Update
+        }
+        // --- KẾT THÚC PHẦN MỚI ---
+
+
+        // --- PHẦN MỚI: ENDPOINT XÓA ---
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var command = new DeleteTodoItemCommand
+            {
+                Id = id,
+                UserId = GetCurrentUserId()
+            };
+
+            await _mediator.Send(command);
+            return NoContent(); // 204 No Content là response thành công cho một request Delete
+        }
+        // --- KẾT THÚC PHẦN MỚI ---
     }
 }
