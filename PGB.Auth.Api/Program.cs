@@ -8,7 +8,6 @@ using PGB.Auth.Infrastructure.Services;
 using PGB.BuildingBlocks.Application.Extensions;
 using System.Reflection;
 using PGB.BuildingBlocks.WebApi.Common.Extensions;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,12 +18,17 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// --- PHẦN MỚI: Kích hoạt Authentication và Authorization ---
+// Mặc dù không cần handler (vì Gateway đã xác thực),
+// các dịch vụ này là cần thiết để middleware và [Authorize] hoạt động.
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+// --- KẾT THÚC PHẦN MỚI ---
+
 // Register IHttpContextAccessor and CurrentUserService
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<PGB.Auth.Api.Services.CurrentUserService>();
 builder.Services.AddScoped<PGB.BuildingBlocks.Domain.Interfaces.ICurrentUserService>(sp => sp.GetRequiredService<PGB.Auth.Api.Services.CurrentUserService>());
-
-// Redis removed — use in-memory behaviors by default
 
 // Register Application services (MediatR, validators, behaviors, AutoMapper)
 builder.Services.AddApplicationServices(Assembly.Load("PGB.Auth.Application"));
@@ -32,7 +36,7 @@ builder.Services.AddApplicationServices(Assembly.Load("PGB.Auth.Application"));
 // Register JwtTokenService from Infrastructure
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
-// Register Auth DbContext (cập nhật connection string name cho phù hợp)
+// Register Auth DbContext
 var conn = builder.Configuration.GetConnectionString("AuthDatabase")
           ?? builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'AuthDatabase' or 'DefaultConnection' not configured");
@@ -48,16 +52,8 @@ builder.Services.AddDbContextPool<AuthDbContext>(options =>
 // Register repositories and domain services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserDomainService, UserDomainService>();
-
-// Register IPasswordHasher implementation
-// Nếu bạn đã có class concrete (ví dụ BcryptPasswordHasher) thay vào bên dưới.
-// Nếu chưa có, bạn cần implement IPasswordHasher trong PGB.Auth.Infrastructure.
 builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
-
-// Register SecuritySettings (tạm dùng default, hoặc bind từ configuration nếu bạn có cấu hình)
 builder.Services.AddSingleton(SecuritySettings.Default());
-
-// JWT validation removed from Auth API — handled by API Gateway
 
 var app = builder.Build();
 
@@ -68,17 +64,14 @@ if (app.Environment.IsDevelopment())
 }
 
 // Use shared middleware (correlation id, etc)
+// Dòng này sẽ chạy UserClaimsMiddleware của chúng ta để tạo HttpContext.User
 app.UseWebApiCommon();
 
-// Enable EF SQL logging when in development
-if (app.Environment.IsDevelopment())
-{
-    var loggerFactory = app.Services.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>();
-    loggerFactory.CreateLogger("EF").LogInformation("EF logging enabled");
-}
-
-// Disable HTTPS redirection for local testing over HTTP
-// app.UseHttpsRedirection();
+// --- PHẦN CẬP NHẬT: Thêm middleware Authentication và Authorization ---
+// Quan trọng: Phải đặt sau UseWebApiCommon và trước MapControllers
+app.UseAuthentication();
+app.UseAuthorization();
+// --- KẾT THÚC CẬP NHẬT ---
 
 app.MapControllers();
 app.Run();

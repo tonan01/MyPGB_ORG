@@ -1,7 +1,8 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
+using System.IdentityModel.Tokens.Jwt; // <-- THÊM USING NÀY
 
 namespace PGB.ApiGateway
 {
@@ -9,7 +10,14 @@ namespace PGB.ApiGateway
     {
         public static void Main(string[] args)
         {
+            // --- THÊM DÒNG NÀY Ở ĐẦU PHƯƠNG THỨC Main ---
+            // Tắt tính năng tự động map claim của Microsoft
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            // ---------------------------------------------
+
             var builder = WebApplication.CreateBuilder(args);
+
+            // ... (phần còn lại của file giữ nguyên)
 
             // Load ocelot configuration
             builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
@@ -62,13 +70,9 @@ namespace PGB.ApiGateway
                 app.UseSwaggerUI();
             }
 
-            // IMPORTANT: Do NOT use UseRouting() with Ocelot
-            // Ocelot handles routing internally
-
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Use Ocelot middleware - this MUST be last
             app.UseOcelot().Wait();
 
             app.Run();
