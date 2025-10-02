@@ -77,10 +77,8 @@ if (app.Environment.IsDevelopment())
     loggerFactory.CreateLogger("EF").LogInformation("EF logging enabled");
 }
 
-app.UseHttpsRedirection();
-
-app.UseAuthentication(); // <- BẮT BUỘC: phải gọi trước UseAuthorization1
-app.UseAuthorization();
+// Disable HTTPS redirection for local testing over HTTP
+// app.UseHttpsRedirection();
 
 app.MapControllers();
 app.Run();

@@ -28,10 +28,11 @@ namespace PGB.ApiGateway
             var audience = jwtSection["Audience"] ?? "PGB_ORG_Users";
 
             var key = System.Text.Encoding.UTF8.GetBytes(secret);
+            // Use named scheme 'JwtBearer' and set it as the default to match ocelot configuration
             builder.Services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = "JwtBearer";
+                options.DefaultChallengeScheme = "JwtBearer";
             })
             .AddJwtBearer("JwtBearer", options =>
             {
@@ -65,7 +66,10 @@ namespace PGB.ApiGateway
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            // If you want only HTTP on local dev, you can remove or comment out UseHttpsRedirection
+            // app.UseHttpsRedirection();
+
+            app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -74,11 +78,7 @@ namespace PGB.ApiGateway
             app.MapControllers();
 
             // Use Ocelot middleware to proxy requests (ensure authentication runs before Ocelot)
-            app.Use(async (context, next) =>
-            {
-                await next();
-            });
-
+            // Start Ocelot after routing and auth middleware
             app.UseOcelot().GetAwaiter().GetResult();
 
             app.Run();
