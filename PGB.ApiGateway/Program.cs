@@ -2,7 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
-using System.IdentityModel.Tokens.Jwt;
+using AspNetCoreRateLimit;
 
 namespace PGB.ApiGateway
 {
@@ -10,14 +10,13 @@ namespace PGB.ApiGateway
     {
         public static void Main(string[] args)
         {
-            // BỎ HOÀN TOÀN DÒNG JwtSecurityTokenHandler... ĐI
-
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
             builder.Services.AddControllers();
 
+            // JWT Authentication
             var jwtSection = builder.Configuration.GetSection("JwtSettings");
             var secret = jwtSection["SecretKey"] ?? throw new InvalidOperationException("JwtSettings:SecretKey not configured");
             var issuer = jwtSection["Issuer"] ?? "PGB_ORG";
@@ -46,6 +45,12 @@ namespace PGB.ApiGateway
                 };
             });
 
+            // Rate Limiting
+            builder.Services.AddMemoryCache();
+            builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+            builder.Services.AddInMemoryRateLimiting();
+            builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -59,9 +64,10 @@ namespace PGB.ApiGateway
                 app.UseSwaggerUI();
             }
 
+            // Middleware order
+            app.UseIpRateLimiting();
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseOcelot().Wait();
 
             app.Run();
