@@ -4,73 +4,81 @@ using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using AspNetCoreRateLimit;
 
-namespace PGB.ApiGateway
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+var builder = WebApplication.CreateBuilder(args);
+
+// === THÊM CORS CHO GATEWAY ===
+builder.Services.AddCors(options =>
 {
-    public class Program
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("http://localhost:5173") // Cho phép frontend
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                      });
+});
+
+builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
+
+builder.Services.AddControllers();
+
+// JWT Authentication
+var jwtSection = builder.Configuration.GetSection("JwtSettings");
+var secret = jwtSection["SecretKey"] ?? throw new InvalidOperationException("JwtSettings:SecretKey not configured");
+var issuer = jwtSection["Issuer"] ?? "PGB_ORG";
+var audience = jwtSection["Audience"] ?? "PGB_ORG_Users";
+var key = System.Text.Encoding.UTF8.GetBytes(secret);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer("JwtBearer", options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        ValidateIssuer = true,
+        ValidIssuer = issuer,
+        ValidateAudience = true,
+        ValidAudience = audience,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
-            builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
+// Rate Limiting
+builder.Services.AddMemoryCache();
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.AddInMemoryRateLimiting();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
-            builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-            // JWT Authentication
-            var jwtSection = builder.Configuration.GetSection("JwtSettings");
-            var secret = jwtSection["SecretKey"] ?? throw new InvalidOperationException("JwtSettings:SecretKey not configured");
-            var issuer = jwtSection["Issuer"] ?? "PGB_ORG";
-            var audience = jwtSection["Audience"] ?? "PGB_ORG_Users";
-            var key = System.Text.Encoding.UTF8.GetBytes(secret);
+builder.Services.AddOcelot(builder.Configuration);
 
-            builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer("JwtBearer", options =>
-            {
-                options.RequireHttpsMetadata = false;
-                options.SaveToken = true;
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = issuer,
-                    ValidateAudience = true,
-                    ValidAudience = audience,
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero
-                };
-            });
+var app = builder.Build();
 
-            // Rate Limiting
-            builder.Services.AddMemoryCache();
-            builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
-            builder.Services.AddInMemoryRateLimiting();
-            builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
-
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-            builder.Services.AddOcelot(builder.Configuration);
-
-            var app = builder.Build();
-
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            // Middleware order
-            app.UseIpRateLimiting();
-            app.UseAuthentication();
-            app.UseAuthorization();
-            app.UseOcelot().Wait();
-
-            app.Run();
-        }
-    }
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+// === SỬ DỤNG CORS TRƯỚC OCELOT ===
+app.UseCors(MyAllowSpecificOrigins);
+
+// Middleware order
+app.UseIpRateLimiting();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseOcelot().Wait();
+
+app.Run();
