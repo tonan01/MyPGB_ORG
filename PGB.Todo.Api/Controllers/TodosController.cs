@@ -25,12 +25,14 @@ namespace PGB.Todo.Api.Controllers
         private Guid GetCurrentUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        // --- CẬP NHẬT THAM SỐ CỦA ACTION ---
+        public async Task<IActionResult> Get([FromQuery] GetTodoItemsQuery query)
         {
-            var query = new GetTodoItemsQuery { UserId = GetCurrentUserId() };
+            query.UserId = GetCurrentUserId();
             var result = await _mediator.Send(query);
             return Ok(result);
         }
+        // ...
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateTodoItemCommand command)

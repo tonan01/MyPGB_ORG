@@ -41,25 +41,23 @@ namespace PGB.Auth.Infrastructure.Services
             var key = Encoding.ASCII.GetBytes(_secretKey);
             var expiresAt = DateTime.UtcNow.AddMinutes(_expirationMinutes);
 
+            // --- PHẦN CẬP NHẬT: SỬ DỤNG TÊN CLAIM NGẮN GỌN ---
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UsernameValue),
-                new Claim(ClaimTypes.Email, user.EmailValue),
-                new Claim("FullName", user.DisplayName),
-                new Claim("IsEmailVerified", user.IsEmailVerified.ToString()),
-                new Claim("jti", Guid.NewGuid().ToString())
-            };
+    {
+        new Claim("sub", user.Id.ToString()), // 'sub' (subject) là tiêu chuẩn cho User ID
+        new Claim("name", user.UsernameValue), // 'name' thay cho ClaimTypes.Name
+        new Claim("email", user.EmailValue), // 'email' thay cho ClaimTypes.Email
+        new Claim("fullName", user.DisplayName),
+        new Claim("isEmailVerified", user.IsEmailVerified.ToString()),
+        new Claim("jti", Guid.NewGuid().ToString())
+    };
 
-            // --- PHẦN CẬP NHẬT ---
-            // Lấy danh sách tên Role từ navigation property và thêm vào claims
-            // Cần đảm bảo User được truy vấn kèm theo UserRoles và Role
             if (user.UserRoles != null && user.UserRoles.Any())
             {
                 var roleNames = user.UserRoles.Select(ur => ur.Role.Name);
                 foreach (var roleName in roleNames)
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, roleName));
+                    claims.Add(new Claim("role", roleName)); // 'role' thay cho ClaimTypes.Role
                 }
             }
             // --- KẾT THÚC CẬP NHẬT ---

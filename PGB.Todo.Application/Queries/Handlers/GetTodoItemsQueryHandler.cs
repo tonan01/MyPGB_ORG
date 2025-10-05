@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using PGB.BuildingBlocks.Application.Models; // Thêm
 using PGB.BuildingBlocks.Application.Queries;
 using PGB.Todo.Application.Dtos;
 using PGB.Todo.Application.Interfaces;
@@ -8,7 +9,8 @@ using System.Threading.Tasks;
 
 namespace PGB.Todo.Application.Queries.Handlers
 {
-    public class GetTodoItemsQueryHandler : IQueryHandler<GetTodoItemsQuery, IEnumerable<TodoItemDto>>
+    // --- THAY ĐỔI KIỂU TRẢ VỀ ---
+    public class GetTodoItemsQueryHandler : IQueryHandler<GetTodoItemsQuery, PagedResult<TodoItemDto>>
     {
         private readonly ITodoRepository _todoRepository;
         private readonly IMapper _mapper;
@@ -19,10 +21,17 @@ namespace PGB.Todo.Application.Queries.Handlers
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<TodoItemDto>> Handle(GetTodoItemsQuery request, CancellationToken cancellationToken)
+        // --- CẬP NHẬT LOGIC ---
+        public async Task<PagedResult<TodoItemDto>> Handle(GetTodoItemsQuery request, CancellationToken cancellationToken)
         {
-            var todoItems = await _todoRepository.GetByUserIdAsync(request.UserId);
-            return _mapper.Map<IEnumerable<TodoItemDto>>(todoItems);
+            // Gọi phương thức phân trang mới
+            var pagedResult = await _todoRepository.GetPagedByUserIdAsync(request);
+
+            // Map danh sách items sang DTO
+            var todoItemDtos = _mapper.Map<List<TodoItemDto>>(pagedResult.Items);
+
+            // Trả về kết quả phân trang với dữ liệu DTO
+            return new PagedResult<TodoItemDto>(todoItemDtos, pagedResult.TotalCount, pagedResult.Page, pagedResult.PageSize);
         }
     }
 }

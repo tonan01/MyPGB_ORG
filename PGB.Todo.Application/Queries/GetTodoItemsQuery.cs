@@ -1,12 +1,12 @@
-﻿using PGB.BuildingBlocks.Application.Queries;
+﻿using PGB.BuildingBlocks.Application.Models; // Thêm using này
+using PGB.BuildingBlocks.Application.Queries;
 using PGB.Todo.Application.Dtos;
-using System;
-using System.Collections.Generic;
 
 namespace PGB.Todo.Application.Queries
 {
-    public class GetTodoItemsQuery : BaseQuery<IEnumerable<TodoItemDto>>
+    // THAY ĐỔI: Kế thừa từ PagedQuery thay vì BaseQuery
+    public class GetTodoItemsQuery : PagedQuery<TodoItemDto>
     {
-        // UserId đã có sẵn trong BaseQuery, controller sẽ gán vào
+        // UserId đã có sẵn trong BaseQuery, không cần thêm gì ở đây
     }
 }
