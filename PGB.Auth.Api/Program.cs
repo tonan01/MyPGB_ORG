@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
 using PGB.Auth.Application.Repositories;
 using PGB.Auth.Application.Services;
@@ -16,11 +17,24 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddWebApiCommon();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+});
+
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
 builder.Services.AddSwaggerGen();
 
-// --- PHẦN QUAN TRỌNG: Kích hoạt Authentication và Authorization ---
-// Chỉ định một scheme mặc định để hệ thống có thể xử lý lỗi Forbid (403) một cách chính xác.
-// Thêm AddJwtBearer() rỗng để đăng ký các service handler cần thiết.
+// Authentication and Authorization
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -28,17 +42,12 @@ builder.Services.AddAuthentication(options =>
 }).AddJwtBearer();
 
 builder.Services.AddAuthorization();
-// --- KẾT THÚC PHẦN QUAN TRỌNG ---
 
-// Register IHttpContextAccessor and CurrentUserService
+// Register services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<PGB.Auth.Api.Services.CurrentUserService>();
 builder.Services.AddScoped<PGB.BuildingBlocks.Domain.Interfaces.ICurrentUserService>(sp => sp.GetRequiredService<PGB.Auth.Api.Services.CurrentUserService>());
-
-// Register Application services
 builder.Services.AddApplicationServices(Assembly.Load("PGB.Auth.Application"));
-
-// Register Infrastructure services
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserDomainService, UserDomainService>();
@@ -56,19 +65,23 @@ builder.Services.AddDbContextPool<AuthDbContext>(options =>
 
 var app = builder.Build();
 
+var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+        {
+            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+        }
+    });
 }
 
-// Chạy các middleware chung (bao gồm cả UserClaimsMiddleware)
 app.UseWebApiCommon();
-
-// Thêm các middleware Authentication và Authorization
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 app.Run();
 

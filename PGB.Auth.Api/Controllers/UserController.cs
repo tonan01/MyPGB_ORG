@@ -12,7 +12,8 @@ using System.Threading.Tasks;
 namespace PGB.Auth.Api.Controllers
 {
     [ApiController]
-    [Route("api/users")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/users")]
     [Authorize]
     public class UserController : ControllerBase
     {
@@ -25,9 +26,6 @@ namespace PGB.Auth.Api.Controllers
 
         private Guid GetCurrentUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-        /// <summary>
-        /// Gets the profile of the currently logged-in user.
-        /// </summary>
         [HttpGet("me")]
         public async Task<ActionResult<UserDto>> Me()
         {
@@ -35,7 +33,7 @@ namespace PGB.Auth.Api.Controllers
             var query = new GetUserByIdQuery(userId);
             var user = await _mediator.Send(query);
 
-            var response = new PGB.Auth.Api.Models.ApiResponse<UserDto>
+            var response = new Models.ApiResponse<UserDto>
             {
                 Success = true,
                 Data = user,
@@ -44,9 +42,6 @@ namespace PGB.Auth.Api.Controllers
             return Ok(response);
         }
 
-        /// <summary>
-        /// Updates the profile of the currently logged-in user.
-        /// </summary>
         [HttpPut("me")]
         public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateMyProfileCommand command)
         {
@@ -55,10 +50,7 @@ namespace PGB.Auth.Api.Controllers
             return NoContent();
         }
 
-        /// <summary>
-        /// Gets a paged list of all users. (Admin/Manager only)
-        /// </summary>
-        [HttpGet] //
+        [HttpGet]
         [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Manager}")]
         public async Task<ActionResult<PagedResult<UserDto>>> GetAllUsers([FromQuery] GetUsersQuery query)
         {
@@ -66,9 +58,6 @@ namespace PGB.Auth.Api.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// Deletes a user by ID. (Admin only)
-        /// </summary>
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = AppRoles.Admin)]
         public async Task<IActionResult> DeleteUser(Guid id)
@@ -76,7 +65,7 @@ namespace PGB.Auth.Api.Controllers
             var command = new DeleteUserCommand
             {
                 Id = id,
-                UserId = GetCurrentUserId() // Ghi nhận ai là người thực hiện xóa
+                UserId = GetCurrentUserId()
             };
             await _mediator.Send(command);
             return NoContent();

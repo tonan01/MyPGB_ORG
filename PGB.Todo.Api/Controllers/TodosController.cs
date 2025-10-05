@@ -10,7 +10,8 @@ using System.Threading.Tasks;
 namespace PGB.Todo.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [Authorize]
     public class TodosController : ControllerBase
     {
@@ -39,7 +40,6 @@ namespace PGB.Todo.Api.Controllers
             return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
         }
 
-        // --- PHẦN MỚI: ENDPOINT SỬA ---
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTodoItemCommand command)
         {
@@ -50,12 +50,9 @@ namespace PGB.Todo.Api.Controllers
 
             command.UserId = GetCurrentUserId();
             await _mediator.Send(command);
-            return NoContent(); // 204 No Content là response thành công cho một request Update
+            return NoContent();
         }
-        // --- KẾT THÚC PHẦN MỚI ---
 
-
-        // --- PHẦN MỚI: ENDPOINT XÓA ---
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -66,8 +63,7 @@ namespace PGB.Todo.Api.Controllers
             };
 
             await _mediator.Send(command);
-            return NoContent(); // 204 No Content là response thành công cho một request Delete
+            return NoContent();
         }
-        // --- KẾT THÚC PHẦN MỚI ---
     }
 }

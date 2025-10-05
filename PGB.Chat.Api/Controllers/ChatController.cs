@@ -10,7 +10,8 @@ using System.Threading.Tasks;
 namespace PGB.Chat.Api.Controllers
 {
     [ApiController]
-    [Route("api/chat")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/chat")]
     [Authorize]
     public class ChatController : ControllerBase
     {
@@ -23,10 +24,6 @@ namespace PGB.Chat.Api.Controllers
 
         private Guid GetCurrentUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-        /// <summary>
-        /// Gửi một tin nhắn mới và nhận lại phản hồi từ AI.
-        /// Có thể bắt đầu một cuộc hội thoại mới hoặc tiếp tục một cuộc hội thoại đã có.
-        /// </summary>
         [HttpPost]
         public async Task<IActionResult> SendMessage([FromBody] SendChatMessageCommand command)
         {
@@ -35,9 +32,6 @@ namespace PGB.Chat.Api.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// Lấy danh sách tất cả các cuộc hội thoại của người dùng.
-        /// </summary>
         [HttpGet("conversations")]
         public async Task<IActionResult> GetConversations()
         {
@@ -46,9 +40,6 @@ namespace PGB.Chat.Api.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// Lấy lịch sử tin nhắn của một cuộc hội thoại cụ thể.
-        /// </summary>
         [HttpGet("conversations/{conversationId:guid}")]
         public async Task<IActionResult> GetConversationHistory(Guid conversationId)
         {

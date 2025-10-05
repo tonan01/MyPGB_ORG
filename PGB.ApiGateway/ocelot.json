@@ -2,9 +2,9 @@
   "Routes": [
     // --- AUTH SERVICE ROUTES (PUBLIC) ---
     {
-      "UpstreamPathTemplate": "/api/auth/register",
+      "UpstreamPathTemplate": "/api/v{version}/auth/register",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/auth/register",
+      "DownstreamPathTemplate": "/api/v{version}/auth/register",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -15,9 +15,9 @@
       "Priority": 1
     },
     {
-      "UpstreamPathTemplate": "/api/auth/login",
+      "UpstreamPathTemplate": "/api/v{version}/auth/login",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/auth/login",
+      "DownstreamPathTemplate": "/api/v{version}/auth/login",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -28,22 +28,9 @@
       "Priority": 1
     },
     {
-      "UpstreamPathTemplate": "/api/auth/refresh",
+      "UpstreamPathTemplate": "/api/v{version}/auth/refresh",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/auth/refresh",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7001
-        }
-      ],
-      "Priority": 1
-    },
-    {
-      "UpstreamPathTemplate": "/auth-swagger/{everything}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamPathTemplate": "/api/v{version}/auth/refresh",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -56,9 +43,9 @@
 
     // --- USER & AUTH PROTECTED ROUTES ---
     {
-      "UpstreamPathTemplate": "/api/users/{everything}",
+      "UpstreamPathTemplate": "/api/v{version}/users/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "DownstreamPathTemplate": "/api/users/{everything}",
+      "DownstreamPathTemplate": "/api/v{version}/users/{everything}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -74,9 +61,9 @@
       "Priority": 2
     },
     {
-      "UpstreamPathTemplate": "/api/users",
+      "UpstreamPathTemplate": "/api/v{version}/users",
       "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/users",
+      "DownstreamPathTemplate": "/api/v{version}/users",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -94,9 +81,9 @@
 
     // --- TODO SERVICE ROUTES ---
     {
-      "UpstreamPathTemplate": "/api/todos/{everything}",
+      "UpstreamPathTemplate": "/api/v{version}/todos/{everything}",
       "UpstreamHttpMethod": [ "GET", "PUT", "DELETE" ],
-      "DownstreamPathTemplate": "/api/todos/{everything}",
+      "DownstreamPathTemplate": "/api/v{version}/todos/{everything}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -111,9 +98,9 @@
       }
     },
     {
-      "UpstreamPathTemplate": "/api/todos",
+      "UpstreamPathTemplate": "/api/v{version}/todos",
       "UpstreamHttpMethod": [ "GET", "POST" ],
-      "DownstreamPathTemplate": "/api/todos",
+      "DownstreamPathTemplate": "/api/v{version}/todos",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -130,9 +117,9 @@
 
     // --- CHAT SERVICE ROUTES ---
     {
-      "UpstreamPathTemplate": "/api/chat/{everything}",
+      "UpstreamPathTemplate": "/api/v{version}/chat/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "DownstreamPathTemplate": "/api/chat/{everything}",
+      "DownstreamPathTemplate": "/api/v{version}/chat/{everything}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {

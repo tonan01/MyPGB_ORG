@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
 using PGB.BuildingBlocks.Application.Extensions;
 using PGB.BuildingBlocks.WebApi.Common.Extensions;
@@ -13,9 +14,24 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddWebApiCommon();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+});
+
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
 builder.Services.AddSwaggerGen();
 
-// Cấu hình Authentication & Authorization
+// Authentication & Authorization
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -23,10 +39,10 @@ builder.Services.AddAuthentication(options =>
 }).AddJwtBearer();
 builder.Services.AddAuthorization();
 
-// Đăng ký các dịch vụ của tầng Application (MediatR, AutoMapper)
+// Register Application services
 builder.Services.AddApplicationServices(Assembly.Load("PGB.Todo.Application"));
 
-// Đăng ký DbContext
+// Register DbContext
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
 builder.Services.AddDbContext<TodoDbContext>(options =>
@@ -35,22 +51,28 @@ builder.Services.AddDbContext<TodoDbContext>(options =>
         sql.MigrationsAssembly("PGB.Todo.Infrastructure");
     }));
 
-// Đăng ký Repository
+// Register Repository
 builder.Services.AddScoped<ITodoRepository, TodoRepository>();
 
 var app = builder.Build();
 
+var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+        {
+            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+        }
+    });
 }
 
-// Thêm các middleware
+// Add middlewares
 app.UseWebApiCommon();
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

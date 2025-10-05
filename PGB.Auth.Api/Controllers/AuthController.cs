@@ -1,16 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using PGB.Auth.Application.Commands;
-using PGB.Auth.Application.Queries;
 using System;
-using System.Security.Claims; // Thêm using này
-using PGB.BuildingBlocks.Domain.Common; // Thêm using này
+using System.Security.Claims;
 
 namespace PGB.Auth.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -20,27 +19,20 @@ namespace PGB.Auth.Api.Controllers
             _mediator = mediator;
         }
 
-        #region Public Endpoints
-        /// <summary>
-        /// Register new user
-        /// </summary>
         [HttpPost("register")]
-        [AllowAnonymous] // Rõ ràng cho biết endpoint này là public
+        [AllowAnonymous]
         public async Task<ActionResult> Register([FromBody] RegisterUserCommand command)
         {
             var result = await _mediator.Send(command);
-            var response = new PGB.Auth.Api.Models.ApiResponse<RegisterUserResponse>
+            var response = new Models.ApiResponse<RegisterUserResponse>
             {
                 Success = true,
                 Data = result,
                 CorrelationId = HttpContext.TraceIdentifier
             };
-            return Created($"/api/users/{result.UserId}", response);
+            return Created($"/api/v1/users/{result.UserId}", response);
         }
 
-        /// <summary>
-        /// User login
-        /// </summary>
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<ActionResult> Login([FromBody] LoginUserCommand command)
@@ -49,7 +41,7 @@ namespace PGB.Auth.Api.Controllers
             command.UserAgent = Request.Headers["User-Agent"].ToString();
 
             var result = await _mediator.Send(command);
-            var response = new PGB.Auth.Api.Models.ApiResponse<LoginUserResponse>
+            var response = new Models.ApiResponse<LoginUserResponse>
             {
                 Success = true,
                 Data = result,
@@ -60,9 +52,6 @@ namespace PGB.Auth.Api.Controllers
             return Ok(response);
         }
 
-        /// <summary>
-        /// Refresh access token
-        /// </summary>
         [HttpPost("refresh")]
         [AllowAnonymous]
         public async Task<ActionResult<RefreshTokenResponse>> Refresh([FromBody] RefreshTokenCommand command)
@@ -70,27 +59,18 @@ namespace PGB.Auth.Api.Controllers
             var result = await _mediator.Send(command);
             return Ok(result);
         }
-        #endregion
 
-        #region Protected Endpoints
-        /// <summary>
-        /// Logout from current device (revoke single refresh token)
-        /// </summary>
         [HttpPost("logout")]
-        [Authorize] // Yêu cầu người dùng phải đăng nhập
+        [Authorize]
         public async Task<IActionResult> Logout([FromBody] LogoutCommand command)
         {
-            // UserId đã được set trong command từ client hoặc có thể lấy từ claims
             command.UserId = GetCurrentUserId();
             await _mediator.Send(command);
             return Ok(new { message = "Đăng xuất thành công" });
         }
 
-        /// <summary>
-        /// Logout from all devices (revoke all refresh tokens)
-        /// </summary>
         [HttpPost("logout-all")]
-        [Authorize] // Yêu cầu người dùng phải đăng nhập
+        [Authorize]
         public async Task<IActionResult> LogoutAll()
         {
             var command = new LogoutAllCommand
@@ -101,12 +81,9 @@ namespace PGB.Auth.Api.Controllers
             await _mediator.Send(command);
             return Ok(new { message = "Đã đăng xuất khỏi tất cả thiết bị" });
         }
-        #endregion
 
-        #region Helper Methods
         private Guid GetCurrentUserId()
         {
-            // Phương thức này giờ đã hoạt động đúng nhờ UserClaimsMiddleware
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
         }
@@ -117,6 +94,5 @@ namespace PGB.Auth.Api.Controllers
                 ? Request.Headers["X-Forwarded-For"].ToString().Split(',')[0].Trim()
                 : HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
         }
-        #endregion
     }
 }

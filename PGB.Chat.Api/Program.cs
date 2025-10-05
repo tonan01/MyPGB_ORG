@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
 using PGB.BuildingBlocks.Application.Extensions;
 using PGB.BuildingBlocks.WebApi.Common.Extensions;
@@ -14,10 +15,26 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddWebApiCommon();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddHttpClient(); // Đăng ký IHttpClientFactory
 
-// Cấu hình Authentication & Authorization
+// API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+});
+
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddHttpClient();
+
+// Authentication & Authorization
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -25,10 +42,10 @@ builder.Services.AddAuthentication(options =>
 }).AddJwtBearer();
 builder.Services.AddAuthorization();
 
-// Đăng ký các dịch vụ của tầng Application
+// Register Application services
 builder.Services.AddApplicationServices(Assembly.Load("PGB.Chat.Application"));
 
-// Đăng ký DbContext
+// Register DbContext
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
 builder.Services.AddDbContext<ChatDbContext>(options =>
@@ -37,22 +54,28 @@ builder.Services.AddDbContext<ChatDbContext>(options =>
         sql.MigrationsAssembly("PGB.Chat.Infrastructure");
     }));
 
-// Đăng ký các dịch vụ của tầng Infrastructure
+// Register Infrastructure services
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IAiChatService, OpenAiChatService>();
 
 var app = builder.Build();
 
+var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+        {
+            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+        }
+    });
 }
 
 app.UseWebApiCommon();
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
