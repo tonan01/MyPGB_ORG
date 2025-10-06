@@ -34,17 +34,19 @@ namespace PGB.Auth.Application.Commands.Handlers
             // 1. Tìm refresh token trong database
             var oldRefreshToken = await _userRepository.GetRefreshTokenAsync(request.RefreshToken, cancellationToken);
 
+            // --- BẮT ĐẦU CẬP NHẬT ---
+            // Thay đổi Exception để trả về lỗi 401 thay vì 500
             if (oldRefreshToken == null || !oldRefreshToken.IsValid)
             {
-                throw new ApplicationValidationException("Refresh token không hợp lệ hoặc đã hết hạn.");
+                throw new AuthenticationException("Refresh token không hợp lệ hoặc đã hết hạn.");
             }
+            // --- KẾT THÚC CẬP NHẬT ---
 
             var user = oldRefreshToken.User;
 
-            // 2. Kiểm tra trạng thái của user (có bị khóa hay không)
             if (user == null || !user.IsActive || user.IsLocked)
             {
-                throw new ApplicationValidationException("Tài khoản của bạn đã bị khóa hoặc không hoạt động.");
+                throw new AuthenticationException("Tài khoản của bạn đã bị khóa hoặc không hoạt động.");
             }
 
             // 3. Tạo Access Token mới
@@ -54,11 +56,13 @@ namespace PGB.Auth.Application.Commands.Handlers
             var newRefreshTokenValue = _userDomainService.GenerateRefreshToken();
             var newRefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_securitySettings.RefreshTokenLifetimeDays);
 
-            // Đánh dấu token cũ đã được sử dụng
             oldRefreshToken.Use("system");
 
-            // Thêm token mới cho user
+            // --- BẮT ĐẦU CẬP NHẬT ---
+            // Thêm token mới vào repository một cách tường minh để EF Core theo dõi và INSERT
             var newRefreshToken = user.AddRefreshToken(newRefreshTokenValue, newRefreshTokenExpiresAt, "system");
+            _userRepository.AddRefreshToken(newRefreshToken);
+            // --- KẾT THÚC CẬP NHẬT ---
 
             // 5. Lưu tất cả thay đổi vào database
             await _userRepository.SaveChangesAsync(cancellationToken);
