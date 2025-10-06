@@ -194,7 +194,8 @@ namespace PGB.Auth.Domain.Entities
         {
             CleanupExpiredTokens();
 
-            var refreshToken = RefreshToken.Create(Id, tokenValue, expiresAt, createdBy);
+            var refreshToken = RefreshToken.Create(this, tokenValue, expiresAt, createdBy);
+
             RefreshTokens.Add(refreshToken);
             return refreshToken;
         }

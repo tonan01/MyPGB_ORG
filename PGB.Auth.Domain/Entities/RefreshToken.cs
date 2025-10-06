@@ -1,10 +1,6 @@
 ﻿using PGB.BuildingBlocks.Domain.Entities;
 using PGB.BuildingBlocks.Domain.Exceptions;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PGB.Auth.Domain.Entities
 {
@@ -22,15 +18,17 @@ namespace PGB.Auth.Domain.Entities
         #endregion
 
         #region Navigation Properties
-        public User User { get; private set; } = null!;
+        public virtual User User { get; private set; } = null!;
         #endregion
 
         #region Constructors
         protected RefreshToken() { }
 
-        private RefreshToken(Guid userId, string token, DateTime expiresAt, string createdBy)
+        // --- CẬP NHẬT CONSTRUCTOR ---
+        private RefreshToken(User user, string token, DateTime expiresAt, string createdBy)
         {
-            UserId = userId;
+            User = user; // Gán toàn bộ đối tượng User
+            UserId = user.Id; // Gán cả UserId
             Token = token;
             ExpiresAt = expiresAt;
             CreatedBy = createdBy;
@@ -38,7 +36,8 @@ namespace PGB.Auth.Domain.Entities
         #endregion
 
         #region Factory Methods
-        public static RefreshToken Create(Guid userId, string token, DateTime expiresAt, string createdBy)
+        // --- CẬP NHẬT PHƯƠNG THỨC CREATE ---
+        public static RefreshToken Create(User user, string token, DateTime expiresAt, string createdBy)
         {
             if (string.IsNullOrWhiteSpace(token))
                 throw new DomainException("Token không được để trống");
@@ -46,7 +45,7 @@ namespace PGB.Auth.Domain.Entities
             if (expiresAt <= DateTime.UtcNow)
                 throw new DomainException("Token phải có thời gian hết hạn trong tương lai");
 
-            return new RefreshToken(userId, token, expiresAt, createdBy);
+            return new RefreshToken(user, token, expiresAt, createdBy);
         }
         #endregion
 
