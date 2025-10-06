@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using PGB.Auth.Domain.Entities;
 using PGB.Auth.Application.Queries;
+using PGB.Auth.Application.Dtos;
 
 namespace PGB.Auth.Application.Mappings
 {

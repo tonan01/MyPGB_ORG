@@ -1,5 +1,6 @@
 ﻿using PGB.BuildingBlocks.Application.Queries;
 using PGB.BuildingBlocks.Application.Models;
+using PGB.Auth.Application.Dtos;
 
 namespace PGB.Auth.Application.Queries
 {

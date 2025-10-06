@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using PGB.Auth.Application.Dtos;
 
 namespace PGB.Auth.Application.Queries.Handlers
 {

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using PGB.Auth.Application.Dtos;
 using PGB.Auth.Application.Repositories;
 using PGB.BuildingBlocks.Application.Exceptions;
 using PGB.BuildingBlocks.Application.Queries;

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PGB.Auth.Application.Commands;
+using PGB.Auth.Application.Dtos;
 using PGB.Auth.Application.Queries;
 using PGB.BuildingBlocks.Application.Models;
 using PGB.BuildingBlocks.Domain.Common;
