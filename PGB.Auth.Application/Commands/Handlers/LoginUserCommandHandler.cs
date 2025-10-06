@@ -51,16 +51,21 @@ namespace PGB.Auth.Application.Commands.Handlers
                 throw new AuthenticationException("Thông tin đăng nhập không hợp lệ");
             }
 
-            // Logic đăng nhập và tạo token
             user.Login(request.IpAddress ?? "Unknown", request.UserAgent ?? "Unknown", "system");
             var accessToken = _jwtTokenService.GenerateAccessToken(user);
             var refreshTokenValue = _userDomainService.GenerateRefreshToken();
             var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(_securitySettings.RefreshTokenLifetimeDays);
+
+            // --- BẮT ĐẦU CẬP NHẬT ---
+            // 1. User domain object tạo ra RefreshToken mới
             var refreshToken = user.AddRefreshToken(refreshTokenValue, refreshTokenExpiresAt, "system");
 
-            await _userRepository.UpdateAsync(user, cancellationToken);
+            // 2. Thêm RefreshToken mới vào repository một cách tường minh
+            _userRepository.AddRefreshToken(refreshToken);
 
+            // 3. Lưu tất cả thay đổi (cả User và RefreshToken mới)
             await _userRepository.SaveChangesAsync(cancellationToken);
+            // --- KẾT THÚC CẬP NHẬT ---
 
             return new LoginUserResponse
             {

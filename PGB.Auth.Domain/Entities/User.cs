@@ -190,15 +190,19 @@ namespace PGB.Auth.Domain.Entities
         #endregion
 
         #region Token Management
+        // --- BẮT ĐẦU CẬP NHẬT ---
         public RefreshToken AddRefreshToken(string tokenValue, DateTime expiresAt, string createdBy)
         {
             CleanupExpiredTokens();
 
-            var refreshToken = RefreshToken.Create(this, tokenValue, expiresAt, createdBy);
+            var refreshToken = RefreshToken.Create(this.Id, tokenValue, expiresAt, createdBy);
 
-            RefreshTokens.Add(refreshToken);
+            // KHÔNG thêm vào collection ở đây nữa để tránh EF Core hiểu nhầm.
+            // RefreshTokens.Add(refreshToken); // <--- XÓA DÒNG NÀY
+
             return refreshToken;
         }
+        // --- KẾT THÚC CẬP NHẬT ---
 
         public void RevokeAllRefreshTokens(string revokedBy, string reason = "Manual revoke")
         {

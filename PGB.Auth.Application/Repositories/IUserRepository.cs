@@ -26,6 +26,10 @@ namespace PGB.Auth.Application.Repositories
         // Refresh tokens
         Task<RefreshToken?> GetRefreshTokenAsync(string token, CancellationToken cancellationToken = default);
 
+        // --- BẮT ĐẦU CẬP NHẬT ---
+        void AddRefreshToken(RefreshToken refreshToken);
+        // --- KẾT THÚC CẬP NHẬT ---
+
         // Unit of work
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

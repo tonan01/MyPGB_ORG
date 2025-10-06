@@ -56,7 +56,6 @@ namespace PGB.Auth.Infrastructure.Repositories
 
         public Task UpdateAsync(User user, CancellationToken cancellationToken = default)
         {
-            _context.Users.Update(user);
             return Task.CompletedTask;
         }
 
@@ -151,8 +150,17 @@ namespace PGB.Auth.Infrastructure.Repositories
         {
             return await _context.RefreshTokens
                 .Include(rt => rt.User)
+                    .ThenInclude(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(rt => rt.Token == token, cancellationToken);
         }
+
+        // --- BẮT ĐẦU CẬP NHẬT ---
+        public void AddRefreshToken(RefreshToken refreshToken)
+        {
+            _context.RefreshTokens.Add(refreshToken);
+        }
+        // --- KẾT THÚC CẬP NHẬT ---
         #endregion
 
         #region Existence Checks
