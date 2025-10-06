@@ -6,14 +6,13 @@ using PGB.Auth.Application.Services;
 using PGB.Auth.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic; // Thêm using này
-using System.Linq; // Thêm using này
+using System.Collections.Generic;
+using System.Linq;
 
 namespace PGB.Auth.Infrastructure.Services
 {
     public class JwtTokenService : IJwtTokenService
     {
-        // ... (Constructor và các dependencies giữ nguyên) ...
         #region Dependencies
         private readonly IConfiguration _configuration;
         private readonly ILogger<JwtTokenService> _logger;
@@ -41,23 +40,23 @@ namespace PGB.Auth.Infrastructure.Services
             var key = Encoding.ASCII.GetBytes(_secretKey);
             var expiresAt = DateTime.UtcNow.AddMinutes(_expirationMinutes);
 
-            // --- PHẦN CẬP NHẬT: SỬ DỤNG TÊN CLAIM NGẮN GỌN ---
+            // --- BẮT ĐẦU CẬP NHẬT: Quay lại sử dụng ClaimTypes tiêu chuẩn ---
             var claims = new List<Claim>
-    {
-        new Claim("sub", user.Id.ToString()), // 'sub' (subject) là tiêu chuẩn cho User ID
-        new Claim("name", user.UsernameValue), // 'name' thay cho ClaimTypes.Name
-        new Claim("email", user.EmailValue), // 'email' thay cho ClaimTypes.Email
-        new Claim("fullName", user.DisplayName),
-        new Claim("isEmailVerified", user.IsEmailVerified.ToString()),
-        new Claim("jti", Guid.NewGuid().ToString())
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UsernameValue),
+                new Claim(ClaimTypes.Email, user.EmailValue),
+                new Claim("fullName", user.DisplayName),
+                new Claim("isEmailVerified", user.IsEmailVerified.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
 
             if (user.UserRoles != null && user.UserRoles.Any())
             {
                 var roleNames = user.UserRoles.Select(ur => ur.Role.Name);
                 foreach (var roleName in roleNames)
                 {
-                    claims.Add(new Claim("role", roleName)); // 'role' thay cho ClaimTypes.Role
+                    claims.Add(new Claim(ClaimTypes.Role, roleName));
                 }
             }
             // --- KẾT THÚC CẬP NHẬT ---
@@ -82,7 +81,6 @@ namespace PGB.Auth.Infrastructure.Services
             };
         }
 
-        // ... (Các phương thức khác giữ nguyên)
         #region Implementation
         public ClaimsPrincipal? ValidateToken(string token)
         {

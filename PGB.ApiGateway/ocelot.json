@@ -41,6 +41,44 @@
       "Priority": 1
     },
 
+    // --- AUTH PROTECTED ROUTES ---
+    {
+      "UpstreamPathTemplate": "/api/v{version}/auth/logout",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/v{version}/auth/logout",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
+      "AddHeadersToRequest": {
+        "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > Delimiter=',' > value"
+      },
+      "Priority": 2
+    },
+    {
+      "UpstreamPathTemplate": "/api/v{version}/auth/logout-all",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/v{version}/auth/logout-all",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
+      "AddHeadersToRequest": {
+        "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > Delimiter=',' > value"
+      },
+      "Priority": 2
+    },
+
     // --- USER & AUTH PROTECTED ROUTES ---
     {
       "UpstreamPathTemplate": "/api/v{version}/users/{everything}",
@@ -56,7 +94,7 @@
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
       "AddHeadersToRequest": {
         "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
-        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > Delimiter=',' > value"
       },
       "Priority": 2
     },
@@ -74,7 +112,7 @@
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
       "AddHeadersToRequest": {
         "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
-        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > Delimiter=',' > value"
       },
       "Priority": 2
     },
@@ -94,7 +132,7 @@
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
       "AddHeadersToRequest": {
         "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
-        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > Delimiter=',' > value"
       }
     },
     {
@@ -111,7 +149,7 @@
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
       "AddHeadersToRequest": {
         "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
-        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > Delimiter=',' > value"
       }
     },
 
@@ -130,7 +168,7 @@
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
       "AddHeadersToRequest": {
         "X-User-Id": "Claims[http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier] > value[0]",
-        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > value[0]"
+        "X-User-Roles": "Claims[http://schemas.microsoft.com/ws/2008/06/identity/claims/role] > Delimiter=',' > value"
       }
     }
   ],
