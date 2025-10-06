@@ -6,8 +6,6 @@ using PGB.BuildingBlocks.Domain.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PGB.Auth.Domain.Entities
 {
@@ -101,11 +99,9 @@ namespace PGB.Auth.Domain.Entities
         #region Role Management
         public void AddRole(Role role, string createdBy)
         {
-            // Kiểm tra xem user đã có vai trò này chưa
             if (!UserRoles.Any(ur => ur.RoleId == role.Id))
             {
                 UserRoles.Add(new UserRole(this.Id, role.Id));
-                // Có thể raise một domain event ở đây nếu cần
             }
         }
         #endregion
@@ -190,19 +186,13 @@ namespace PGB.Auth.Domain.Entities
         #endregion
 
         #region Token Management
-        // --- BẮT ĐẦU CẬP NHẬT ---
         public RefreshToken AddRefreshToken(string tokenValue, DateTime expiresAt, string createdBy)
         {
             CleanupExpiredTokens();
-
             var refreshToken = RefreshToken.Create(this.Id, tokenValue, expiresAt, createdBy);
-
-            // KHÔNG thêm vào collection ở đây nữa để tránh EF Core hiểu nhầm.
-            // RefreshTokens.Add(refreshToken); // <--- XÓA DÒNG NÀY
-
+            // Không thêm vào collection ở đây để logic được xử lý ở tầng Repository
             return refreshToken;
         }
-        // --- KẾT THÚC CẬP NHẬT ---
 
         public void RevokeAllRefreshTokens(string revokedBy, string reason = "Manual revoke")
         {

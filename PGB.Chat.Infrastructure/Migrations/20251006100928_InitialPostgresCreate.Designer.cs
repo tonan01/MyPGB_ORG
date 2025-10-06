@@ -12,8 +12,8 @@ using PGB.Chat.Infrastructure.Persistence;
 namespace PGB.Chat.Infrastructure.Migrations
 {
     [DbContext(typeof(ChatDbContext))]
-    [Migration("20251002134836_c")]
-    partial class c
+    [Migration("20251006100928_InitialPostgresCreate")]
+    partial class InitialPostgresCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

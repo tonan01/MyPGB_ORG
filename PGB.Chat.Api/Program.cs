@@ -49,7 +49,7 @@ builder.Services.AddApplicationServices(Assembly.Load("PGB.Chat.Application"));
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
 builder.Services.AddDbContext<ChatDbContext>(options =>
-    options.UseSqlServer(conn, sql =>
+    options.UseNpgsql(conn, sql =>
     {
         sql.MigrationsAssembly("PGB.Chat.Infrastructure");
     }));

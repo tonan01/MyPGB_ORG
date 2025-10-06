@@ -31,16 +31,12 @@ namespace PGB.Auth.Application.Commands.Handlers
 
         public async Task<RefreshTokenResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
-            // 1. Tìm refresh token trong database
             var oldRefreshToken = await _userRepository.GetRefreshTokenAsync(request.RefreshToken, cancellationToken);
 
-            // --- BẮT ĐẦU CẬP NHẬT ---
-            // Thay đổi Exception để trả về lỗi 401 thay vì 500
             if (oldRefreshToken == null || !oldRefreshToken.IsValid)
             {
                 throw new AuthenticationException("Refresh token không hợp lệ hoặc đã hết hạn.");
             }
-            // --- KẾT THÚC CẬP NHẬT ---
 
             var user = oldRefreshToken.User;
 
@@ -49,25 +45,20 @@ namespace PGB.Auth.Application.Commands.Handlers
                 throw new AuthenticationException("Tài khoản của bạn đã bị khóa hoặc không hoạt động.");
             }
 
-            // 3. Tạo Access Token mới
+            //Tạo Access Token mới
             var newAccessToken = _jwtTokenService.GenerateAccessToken(user);
 
-            // 4. Tạo Refresh Token mới và thu hồi token cũ
+            //Tạo Refresh Token mới và thu hồi token cũ
             var newRefreshTokenValue = _userDomainService.GenerateRefreshToken();
             var newRefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_securitySettings.RefreshTokenLifetimeDays);
 
             oldRefreshToken.Use("system");
 
-            // --- BẮT ĐẦU CẬP NHẬT ---
-            // Thêm token mới vào repository một cách tường minh để EF Core theo dõi và INSERT
             var newRefreshToken = user.AddRefreshToken(newRefreshTokenValue, newRefreshTokenExpiresAt, "system");
             _userRepository.AddRefreshToken(newRefreshToken);
-            // --- KẾT THÚC CẬP NHẬT ---
 
-            // 5. Lưu tất cả thay đổi vào database
             await _userRepository.SaveChangesAsync(cancellationToken);
 
-            // 6. Trả về cặp token mới
             return new RefreshTokenResponse
             {
                 AccessToken = newAccessToken.Token,

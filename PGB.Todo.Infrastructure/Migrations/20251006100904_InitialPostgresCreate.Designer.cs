@@ -12,15 +12,15 @@ using PGB.Todo.Infrastructure.Persistence;
 namespace PGB.Todo.Infrastructure.Migrations
 {
     [DbContext(typeof(TodoDbContext))]
-    [Migration("20251002113438_sa")]
-    partial class sa
+    [Migration("20251006100904_InitialPostgresCreate")]
+    partial class InitialPostgresCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);

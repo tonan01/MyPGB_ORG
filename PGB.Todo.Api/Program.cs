@@ -46,7 +46,7 @@ builder.Services.AddApplicationServices(Assembly.Load("PGB.Todo.Application"));
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
 builder.Services.AddDbContext<TodoDbContext>(options =>
-    options.UseSqlServer(conn, sql =>
+    options.UseNpgsql(conn, sql =>
     {
         sql.MigrationsAssembly("PGB.Todo.Infrastructure");
     }));

@@ -12,8 +12,8 @@ using PGB.Auth.Infrastructure.Data;
 namespace PGB.Auth.Infrastructure.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20251002083337_AddUserRolesSchema")]
-    partial class AddUserRolesSchema
+    [Migration("20251006100805_InitialPostgresCreate")]
+    partial class InitialPostgresCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -388,11 +388,6 @@ namespace PGB.Auth.Infrastructure.Migrations
                                 .HasMaxLength(50)
                                 .HasColumnType("nvarchar(50)")
                                 .HasColumnName("LastName");
-
-                            b1.Property<string>("MiddleName")
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("MiddleName");
 
                             b1.HasKey("UserId");
 

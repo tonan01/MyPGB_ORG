@@ -40,7 +40,6 @@ namespace PGB.Auth.Infrastructure.Services
             var key = Encoding.ASCII.GetBytes(_secretKey);
             var expiresAt = DateTime.UtcNow.AddMinutes(_expirationMinutes);
 
-            // --- BẮT ĐẦU CẬP NHẬT: Quay lại sử dụng ClaimTypes tiêu chuẩn ---
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -59,7 +58,6 @@ namespace PGB.Auth.Infrastructure.Services
                     claims.Add(new Claim(ClaimTypes.Role, roleName));
                 }
             }
-            // --- KẾT THÚC CẬP NHẬT ---
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
