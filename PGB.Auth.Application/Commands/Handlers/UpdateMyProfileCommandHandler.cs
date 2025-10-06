@@ -25,8 +25,7 @@ namespace PGB.Auth.Application.Commands.Handlers
                 throw new NotFoundException("User", request.UserId);
             }
 
-            // Tạo Value Object FullName mới từ request
-            var newFullName = FullName.Create(request.FirstName, request.LastName, request.MiddleName);
+            var newFullName = FullName.Create(request.FirstName, request.LastName);
 
             // Gọi phương thức domain để cập nhật profile
             user.UpdateProfile(newFullName, "user"); // "user" cho biết hành động này do chính người dùng thực hiện

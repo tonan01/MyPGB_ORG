@@ -7,8 +7,5 @@ namespace PGB.Auth.Application.Commands
     {
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-
-        // UserId sẽ được kế thừa từ BaseCommand và gán trong controller
     }
 }

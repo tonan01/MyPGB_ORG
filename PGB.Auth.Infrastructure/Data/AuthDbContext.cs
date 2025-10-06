@@ -75,10 +75,6 @@ namespace PGB.Auth.Infrastructure.Data
                         .HasColumnName("LastName")
                         .IsRequired()
                         .HasMaxLength(50);
-
-                    fullName.Property(fn => fn.MiddleName)
-                        .HasColumnName("MiddleName")
-                        .HasMaxLength(50);
                 });
 
                 // HashedPassword Value Object
