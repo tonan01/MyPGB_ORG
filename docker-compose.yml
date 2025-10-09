@@ -1,0 +1,118 @@
+﻿version: '3.8'
+
+services:
+  # ====================================================================
+  # I. DỊCH VỤ DATABASE (POSTGRESQL)
+  # ====================================================================
+
+  db_auth:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: PGB_AuthDb
+    volumes:
+      - auth_data:/var/lib/postgresql/data 
+
+  db_todo:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: PGB_TodoDb
+    volumes:
+      - todo_data:/var/lib/postgresql/data
+
+  db_chat:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: PGB_ChatDb
+    volumes:
+      - chat_data:/var/lib/postgresql/data
+
+  # ====================================================================
+  # II. DỊCH VỤ AUTH API (SỬ DỤNG HTTP 8080 NỘI BỘ)
+  # ====================================================================
+
+  pgb.auth.api:
+    build:
+      context: . 
+      dockerfile: PGB.Auth.Api/Dockerfile
+    ports:
+      - "7001:8080" # Ánh xạ cổng ngoài 7001 vào HTTP nội bộ 8080
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080 # CHỈ DÙNG HTTP ĐỂ KHẮC PHỤC LỖI CHỨNG CHỈ
+      ConnectionStrings__DefaultConnection: Host=db_auth;Port=5432;Username=user;Password=password;Database=PGB_AuthDb
+      JwtSettings__SecretKey: change_this_to_a_strong_secret_for_dev 
+    depends_on:
+      - db_auth
+
+  # ====================================================================
+  # III. DỊCH VỤ TODO API (SỬ DỤNG HTTP 8080 NỘI BỘ)
+  # ====================================================================
+
+  pgb.todo.api:
+    build:
+      context: .
+      dockerfile: PGB.Todo.Api/Dockerfile
+    ports:
+      - "7002:8080" # Ánh xạ cổng ngoài 7002 vào HTTP nội bộ 8080
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080 # CHỈ DÙNG HTTP
+      ConnectionStrings__DefaultConnection: Host=db_todo;Port=5432;Username=user;Password=password;Database=PGB_TodoDb
+    depends_on:
+      - db_todo
+
+  # ====================================================================
+  # IV. DỊCH VỤ CHAT API (SỬ DỤNG HTTP 8080 NỘI BỘ)
+  # ====================================================================
+
+  pgb.chat.api:
+    build:
+      context: .
+      dockerfile: PGB.Chat.Api/Dockerfile
+    ports:
+      - "7003:8080" # Ánh xạ cổng ngoài 7003 vào HTTP nội bộ 8080
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080 # CHỈ DÙNG HTTP
+      ConnectionStrings__DefaultConnection: Host=db_chat;Port=5432;Username=user;Password=password;Database=PGB_ChatDb
+      OpenAI__ApiKey: sk-your-ai-key-here # PHẢI THAY BẰNG KEY CỦA BẠN
+    depends_on:
+      - db_chat
+
+  # ====================================================================
+  # V. API GATEWAY (SỬ DỤNG HTTP 8080 NỘI BỘ)
+  # ====================================================================
+
+  pgb.apigateway:
+    build:
+      context: .
+      dockerfile: PGB.ApiGateway/Dockerfile
+    ports:
+      - "7000:8080" # Ánh xạ cổng ngoài 7000 vào HTTP nội bộ 8080
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080 # CHỈ DÙNG HTTP
+      JwtSettings__SecretKey: change_this_to_a_strong_secret_for_dev 
+      JwtSettings__Issuer: PGB_ORG
+      JwtSettings__Audience: PGB_ORG_Users
+    depends_on:
+      - pgb.auth.api
+      - pgb.todo.api
+      - pgb.chat.api
+
+# ====================================================================
+# VI. VOLUMES (Lưu trữ dữ liệu DB lâu dài)
+# ====================================================================
+volumes:
+  auth_data:
+  todo_data:
+  chat_data:

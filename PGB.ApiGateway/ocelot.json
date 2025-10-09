@@ -5,11 +5,11 @@
       "UpstreamPathTemplate": "/api/v{version}/auth/register",
       "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/v{version}/auth/register",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7001
+          "Host": "pgb.auth.api",
+          "Port": 8080
         }
       ],
       "Priority": 1
@@ -18,11 +18,11 @@
       "UpstreamPathTemplate": "/api/v{version}/auth/login",
       "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/v{version}/auth/login",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7001
+          "Host": "pgb.auth.api",
+          "Port": 8080
         }
       ],
       "Priority": 1
@@ -31,11 +31,11 @@
       "UpstreamPathTemplate": "/api/v{version}/auth/refresh",
       "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/v{version}/auth/refresh",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7001
+          "Host": "pgb.auth.api",
+          "Port": 8080
         }
       ],
       "Priority": 1
@@ -46,11 +46,11 @@
       "UpstreamPathTemplate": "/api/v{version}/auth/logout",
       "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/v{version}/auth/logout",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7001
+          "Host": "pgb.auth.api",
+          "Port": 8080
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -64,11 +64,11 @@
       "UpstreamPathTemplate": "/api/v{version}/auth/logout-all",
       "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/v{version}/auth/logout-all",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7001
+          "Host": "pgb.auth.api",
+          "Port": 8080
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -84,11 +84,11 @@
       "UpstreamPathTemplate": "/api/v{version}/users/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
       "DownstreamPathTemplate": "/api/v{version}/users/{everything}",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7001
+          "Host": "pgb.auth.api",
+          "Port": 8080
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -102,11 +102,11 @@
       "UpstreamPathTemplate": "/api/v{version}/users",
       "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/api/v{version}/users",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7001
+          "Host": "pgb.auth.api",
+          "Port": 8080
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -122,11 +122,11 @@
       "UpstreamPathTemplate": "/api/v{version}/todos/{everything}",
       "UpstreamHttpMethod": [ "GET", "PUT", "DELETE" ],
       "DownstreamPathTemplate": "/api/v{version}/todos/{everything}",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7002
+          "Host": "pgb.todo.api",
+          "Port": 8080
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -139,11 +139,11 @@
       "UpstreamPathTemplate": "/api/v{version}/todos",
       "UpstreamHttpMethod": [ "GET", "POST" ],
       "DownstreamPathTemplate": "/api/v{version}/todos",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7002
+          "Host": "pgb.todo.api",
+          "Port": 8080
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -158,11 +158,11 @@
       "UpstreamPathTemplate": "/api/v{version}/chat/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
       "DownstreamPathTemplate": "/api/v{version}/chat/{everything}",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 7003
+          "Host": "pgb.chat.api",
+          "Port": 8080
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
