@@ -83,6 +83,27 @@ app.UseWebApiCommon();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// --- TỰ ĐỘNG APPLY MIGRATIONS KHI KHỞI ĐỘNG ---
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AuthDbContext>();
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
+// --- KẾT THÚC PHẦN CODE MỚI ---
+
 app.Run();
 
 public partial class Program { }

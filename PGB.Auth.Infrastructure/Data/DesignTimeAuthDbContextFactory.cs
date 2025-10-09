@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using System;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace PGB.Auth.Infrastructure.Data
 {
@@ -8,20 +9,25 @@ namespace PGB.Auth.Infrastructure.Data
     {
         public AuthDbContext CreateDbContext(string[] args)
         {
+            string path = Directory.GetCurrentDirectory();
+            var apiPath = Path.GetFullPath(Path.Combine(path, @"..\PGB.Auth.Api"));
+
+            IConfigurationRoot configuration = new ConfigurationBuilder()
+                .SetBasePath(apiPath)
+                .AddJsonFile("appsettings.json")
+                .Build();
+
             var optionsBuilder = new DbContextOptionsBuilder<AuthDbContext>();
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-            // Try to read connection string from env var, otherwise fallback to localdb for design-time
-            // Prefer environment variable AUTH_DEFAULT_CONNECTION, otherwise fallback to provided default
-            var conn = Environment.GetEnvironmentVariable("AUTH_DEFAULT_CONNECTION") ?? "Server=localhost;Database=PGB_AuthDb;User Id=sa;Password=123;TrustServerCertificate=true;MultipleActiveResultSets=true";
-
-            optionsBuilder.UseSqlServer(conn, sql =>
+            if (string.IsNullOrEmpty(connectionString))
             {
-                sql.MigrationsAssembly(typeof(AuthDbContext).Assembly.FullName);
-            });
+                throw new InvalidDataException("Could not find a connection string named 'DefaultConnection'.");
+            }
+
+            optionsBuilder.UseNpgsql(connectionString); // Đảm bảo đây là UseNpgsql
 
             return new AuthDbContext(optionsBuilder.Options);
         }
     }
 }
-
-
