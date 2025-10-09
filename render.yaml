@@ -1,14 +1,14 @@
-﻿# render.yaml - Phiên bản đã sửa lỗi cú pháp hoàn chỉnh
+﻿# render.yaml - Phiên bản cuối cùng, đảm bảo sử dụng gói miễn phí
 
 # ==========================================
-# I. ĐỊNH NGHĨA CÁC DATABASE
-# Databases phải được định nghĩa ở mục riêng này
+# I. ĐỊNH NGHĨA CÁC DATABASE MIỄN PHÍ
+# Đây là cách đúng để tạo DB miễn phí trên Render.
 # ==========================================
 databases:
   - name: pgb-auth-db
-    databaseName: pgb_auth_db # Tên database sẽ được tạo
-    user: pgb_user # Tên user
-    plan: free # Chọn gói miễn phí
+    databaseName: pgb_auth_db
+    user: pgb_user
+    plan: free # Quan trọng: Chỉ định rõ gói miễn phí
 
   - name: pgb-todo-db
     databaseName: pgb_todo_db
@@ -21,18 +21,68 @@ databases:
     plan: free
 
 # ==========================================
-# II. ĐỊNH NGHĨA CÁC SERVICES
+# II. ĐỊNH NGHĨA CÁC WEB SERVICES
+# Các service này sẽ tự động dùng gói miễn phí khi không chỉ định 'plan'.
 # ==========================================
 services:
   # --- Backend Microservices (chạy nội bộ, không public) ---
   - name: pgb-auth-api
-    type: web # Vẫn là 'web' nhưng sẽ không public nếu không có 'routes'
+    type: web
     runtime: docker
     dockerfilePath: ./PGB.Auth.Api/Dockerfile
     envVars:
       - key: ASPNETCORE_URLS
-        value: http://+:8080
+        value: http://+:10000
       - key: ConnectionStrings__DefaultConnection
         fromDatabase:
           name: pgb-auth-db
-          property: connectionString # Lấy chuỗi kết nối từ database đã
+          property: connectionString
+      - key: JwtSettings__SecretKey
+        generateValue: true
+
+  - name: pgb-todo-api
+    type: web
+    runtime: docker
+    dockerfilePath: ./PGB.Todo.Api/Dockerfile
+    envVars:
+      - key: ASPNETCORE_URLS
+        value: http://+:10000
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: pgb-todo-db
+          property: connectionString
+
+  - name: pgb-chat-api
+    type: web
+    runtime: docker
+    dockerfilePath: ./PGB.Chat.Api/Dockerfile
+    envVars:
+      - key: ASPNETCORE_URLS
+        value: http://+:10000
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: pgb-chat-db
+          property: connectionString
+      - key: OpenAI__ApiKey
+        sync: false
+
+  # --- API Gateway (Điểm truy cập công khai duy nhất) ---
+  - name: pgb-apigateway
+    type: web
+    runtime: docker
+    dockerfilePath: ./PGB.ApiGateway/Dockerfile
+    envVars:
+      - key: ASPNETCORE_URLS
+        value: http://+:10000
+      - key: JwtSettings__SecretKey
+        fromService:
+          type: web
+          name: pgb-auth-api
+          envVarKey: JwtSettings__SecretKey
+      # Cập nhật ocelot.json để đọc các biến môi trường này
+      - key: Services__auth__url
+        value: http://pgb-auth-api:10000
+      - key: Services__todo__url
+        value: http://pgb-todo-api:10000
+      - key: Services__chat__url
+        value: http://pgb-chat-api:10000
