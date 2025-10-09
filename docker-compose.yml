@@ -10,7 +10,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # <-- Đọc từ file .env
       POSTGRES_DB: PGB_AuthDb
     volumes:
       - auth_data:/var/lib/postgresql/data
@@ -25,7 +25,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # <-- Đọc từ file .env
       POSTGRES_DB: PGB_TodoDb
     volumes:
       - todo_data:/var/lib/postgresql/data
@@ -40,7 +40,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # <-- Đọc từ file .env
       POSTGRES_DB: PGB_ChatDb
     volumes:
       - chat_data:/var/lib/postgresql/data
@@ -56,15 +56,15 @@ services:
 
   pgb.auth.api:
     build:
-      context: . 
+      context: .
       dockerfile: PGB.Auth.Api/Dockerfile
     ports:
       - "7001:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: Production # <-- Chuyển sang Production
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: Host=db_auth;Port=5432;Username=user;Password=password;Database=PGB_AuthDb
-      JwtSettings__SecretKey: change_this_to_a_strong_secret_for_dev 
+      ConnectionStrings__DefaultConnection: Host=db_auth;Port=5432;Username=user;Password=${POSTGRES_PASSWORD};Database=PGB_AuthDb
+      JwtSettings__SecretKey: ${JWT_SECRETKEY} # <-- Đọc từ file .env
     depends_on:
       db_auth:
         condition: service_healthy
@@ -80,9 +80,9 @@ services:
     ports:
       - "7002:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: Host=db_todo;Port=5432;Username=user;Password=password;Database=PGB_TodoDb
+      ConnectionStrings__DefaultConnection: Host=db_todo;Port=5432;Username=user;Password=${POSTGRES_PASSWORD};Database=PGB_TodoDb
     depends_on:
       db_todo:
         condition: service_healthy
@@ -98,10 +98,10 @@ services:
     ports:
       - "7003:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: Host=db_chat;Port=5432;Username=user;Password=password;Database=PGB_ChatDb
-      OpenAI__ApiKey: sk-your-ai-key-here
+      ConnectionStrings__DefaultConnection: Host=db_chat;Port=5432;Username=user;Password=${POSTGRES_PASSWORD};Database=PGB_ChatDb
+      OpenAI__ApiKey: ${OPENAI_APIKEY} # <-- Đọc từ file .env
     depends_on:
       db_chat:
         condition: service_healthy
@@ -117,9 +117,9 @@ services:
     ports:
       - "7000:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      JwtSettings__SecretKey: change_this_to_a_strong_secret_for_dev 
+      JwtSettings__SecretKey: ${JWT_SECRETKEY} # <-- Đọc từ file .env
       JwtSettings__Issuer: PGB_ORG
       JwtSettings__Audience: PGB_ORG_Users
     depends_on:
@@ -128,7 +128,7 @@ services:
       - pgb.chat.api
 
 # ====================================================================
-# VI. VOLUMES
+# VI. VOLUMES (Lưu trữ dữ liệu DB lâu dài)
 # ====================================================================
 volumes:
   auth_data:

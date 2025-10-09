@@ -361,3 +361,16 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# =================================================
+# === PHẦN THÊM VÀO ĐỂ BẢO MẬT ===
+# =================================================
+
+# File chứa các biến môi trường và secret cho production
+.env
+
+# Các file cấu hình cho môi trường development chứa key
+**/appsettings.Development.json
+
+# File cấu hình của service Chat có thể chứa key OpenAI
+PGB.Chat.Api/appsettings.json
