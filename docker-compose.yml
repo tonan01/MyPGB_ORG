@@ -13,7 +13,12 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: PGB_AuthDb
     volumes:
-      - auth_data:/var/lib/postgresql/data 
+      - auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d PGB_AuthDb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   db_todo:
     image: postgres:16-alpine
@@ -24,6 +29,11 @@ services:
       POSTGRES_DB: PGB_TodoDb
     volumes:
       - todo_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d PGB_TodoDb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   db_chat:
     image: postgres:16-alpine
@@ -34,9 +44,14 @@ services:
       POSTGRES_DB: PGB_ChatDb
     volumes:
       - chat_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d PGB_ChatDb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # ====================================================================
-  # II. DỊCH VỤ AUTH API (SỬ DỤNG HTTP 8080 NỘI BỘ)
+  # II. DỊCH VỤ AUTH API
   # ====================================================================
 
   pgb.auth.api:
@@ -44,17 +59,18 @@ services:
       context: . 
       dockerfile: PGB.Auth.Api/Dockerfile
     ports:
-      - "7001:8080" # Ánh xạ cổng ngoài 7001 vào HTTP nội bộ 8080
+      - "7001:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:8080 # CHỈ DÙNG HTTP ĐỂ KHẮC PHỤC LỖI CHỨNG CHỈ
+      ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=db_auth;Port=5432;Username=user;Password=password;Database=PGB_AuthDb
       JwtSettings__SecretKey: change_this_to_a_strong_secret_for_dev 
     depends_on:
-      - db_auth
+      db_auth:
+        condition: service_healthy
 
   # ====================================================================
-  # III. DỊCH VỤ TODO API (SỬ DỤNG HTTP 8080 NỘI BỘ)
+  # III. DỊCH VỤ TODO API
   # ====================================================================
 
   pgb.todo.api:
@@ -62,16 +78,17 @@ services:
       context: .
       dockerfile: PGB.Todo.Api/Dockerfile
     ports:
-      - "7002:8080" # Ánh xạ cổng ngoài 7002 vào HTTP nội bộ 8080
+      - "7002:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:8080 # CHỈ DÙNG HTTP
+      ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=db_todo;Port=5432;Username=user;Password=password;Database=PGB_TodoDb
     depends_on:
-      - db_todo
+      db_todo:
+        condition: service_healthy
 
   # ====================================================================
-  # IV. DỊCH VỤ CHAT API (SỬ DỤNG HTTP 8080 NỘI BỘ)
+  # IV. DỊCH VỤ CHAT API
   # ====================================================================
 
   pgb.chat.api:
@@ -79,17 +96,18 @@ services:
       context: .
       dockerfile: PGB.Chat.Api/Dockerfile
     ports:
-      - "7003:8080" # Ánh xạ cổng ngoài 7003 vào HTTP nội bộ 8080
+      - "7003:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:8080 # CHỈ DÙNG HTTP
+      ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=db_chat;Port=5432;Username=user;Password=password;Database=PGB_ChatDb
-      OpenAI__ApiKey: sk-your-ai-key-here # PHẢI THAY BẰNG KEY CỦA BẠN
+      OpenAI__ApiKey: sk-your-ai-key-here
     depends_on:
-      - db_chat
+      db_chat:
+        condition: service_healthy
 
   # ====================================================================
-  # V. API GATEWAY (SỬ DỤNG HTTP 8080 NỘI BỘ)
+  # V. API GATEWAY
   # ====================================================================
 
   pgb.apigateway:
@@ -97,10 +115,10 @@ services:
       context: .
       dockerfile: PGB.ApiGateway/Dockerfile
     ports:
-      - "7000:8080" # Ánh xạ cổng ngoài 7000 vào HTTP nội bộ 8080
+      - "7000:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:8080 # CHỈ DÙNG HTTP
+      ASPNETCORE_URLS: http://+:8080
       JwtSettings__SecretKey: change_this_to_a_strong_secret_for_dev 
       JwtSettings__Issuer: PGB_ORG
       JwtSettings__Audience: PGB_ORG_Users
@@ -110,7 +128,7 @@ services:
       - pgb.chat.api
 
 # ====================================================================
-# VI. VOLUMES (Lưu trữ dữ liệu DB lâu dài)
+# VI. VOLUMES
 # ====================================================================
 volumes:
   auth_data:

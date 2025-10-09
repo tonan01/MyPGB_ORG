@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
 using PGB.Auth.Application.Repositories;
 using PGB.Auth.Application.Services;
+using PGB.Auth.Domain.Entities; // Thêm using này
 using PGB.Auth.Domain.ValueObjects;
 using PGB.Auth.Infrastructure.Data;
 using PGB.Auth.Infrastructure.Repositories;
 using PGB.Auth.Infrastructure.Services;
 using PGB.BuildingBlocks.Application.Extensions;
+using PGB.BuildingBlocks.Domain.Common; // Thêm using này
 using PGB.BuildingBlocks.WebApi.Common.Extensions;
 using System.Reflection;
 
@@ -79,30 +81,47 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseWebApiCommon();
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
-
-// --- TỰ ĐỘNG APPLY MIGRATIONS KHI KHỞI ĐỘNG ---
+// --- BẮT ĐẦU: Code tự động Apply Migrations và Seed Data ---
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
     try
     {
         var context = services.GetRequiredService<AuthDbContext>();
+
+        // 1. Áp dụng migrations
         if (context.Database.GetPendingMigrations().Any())
         {
+            logger.LogInformation("Applying database migrations...");
             context.Database.Migrate();
+            logger.LogInformation("Database migrations applied successfully.");
+        }
+
+        // 2. Seed dữ liệu Roles
+        if (!context.Roles.Any())
+        {
+            logger.LogInformation("Seeding default roles...");
+            context.Roles.AddRange(
+                new Role(AppRoles.Admin, "Administrator role with full permissions."),
+                new Role(AppRoles.Manager, "Manager role with elevated permissions."),
+                new Role(AppRoles.User, "Standard user role.")
+            );
+            context.SaveChanges();
+            logger.LogInformation("Default roles seeded successfully.");
         }
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
+        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
     }
 }
-// --- KẾT THÚC PHẦN CODE MỚI ---
+// --- KẾT THÚC ---
+
+app.UseWebApiCommon();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 
 app.Run();
 
