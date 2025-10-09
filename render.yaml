@@ -1,0 +1,123 @@
+﻿# render.yaml - Cấu hình cho toàn bộ hệ thống microservices trên Render
+
+# Định nghĩa các service sẽ được triển khai.
+services:
+  # ==========================================
+  # I. ĐỊNH NGHĨA CÁC DATABASE
+  # Render sẽ tạo 3 database Postgres riêng biệt cho mỗi service.
+  # ==========================================
+  - name: pgb-auth-db
+    type: pserv # Private Service cho Database
+    image:
+      url: postgres:16-alpine # Sử dụng image postgres
+    disk:
+      name: auth-data
+      mountPath: /var/lib/postgresql/data # Lưu dữ liệu vào đĩa
+    envVars:
+      - key: POSTGRES_USER
+        value: pgb_database_user # Tên user
+      - key: POSTGRES_PASSWORD
+        generateValue: true # Render tự tạo mật khẩu an toàn
+      - key: POSTGRES_DB
+        value: pgb_auth_db # Tên database
+
+  - name: pgb-todo-db
+    type: pserv
+    image:
+      url: postgres:16-alpine
+    disk:
+      name: todo-data
+      mountPath: /var/lib/postgresql/data
+    envVars:
+      - key: POSTGRES_USER
+        value: pgb_database_user
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+      - key: POSTGRES_DB
+        value: pgb_todo_db
+
+  - name: pgb-chat-db
+    type: pserv
+    image:
+      url: postgres:16-alpine
+    disk:
+      name: chat-data
+      mountPath: /var/lib/postgresql/data
+    envVars:
+      - key: POSTGRES_USER
+        value: pgb_database_user
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+      - key: POSTGRES_DB
+        value: pgb_chat_db
+
+  # ==========================================
+  # II. ĐỊNH NGHĨA CÁC MICROSERVICES
+  # Mỗi service là một "Web Service" được build từ Dockerfile tương ứng.
+  # ==========================================
+  - name: pgb-auth-api
+    type: web
+    env: docker
+    dockerfilePath: ./PGB.Auth.Api/Dockerfile
+    envVars:
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: ConnectionStrings__DefaultConnection
+        fromService:
+          type: pserv
+          name: pgb-auth-db
+          envVarKey: DATABASE_URL # Render tự động inject chuỗi kết nối vào đây
+      - key: JwtSettings__SecretKey
+        generateValue: true # Render tự tạo secret key an toàn
+
+  - name: pgb-todo-api
+    type: web
+    env: docker
+    dockerfilePath: ./PGB.Todo.Api/Dockerfile
+    envVars:
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: ConnectionStrings__DefaultConnection
+        fromService:
+          type: pserv
+          name: pgb-todo-db
+          envVarKey: DATABASE_URL
+
+  - name: pgb-chat-api
+    type: web
+    env: docker
+    dockerfilePath: ./PGB.Chat.Api/Dockerfile
+    envVars:
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: ConnectionStrings__DefaultConnection
+        fromService:
+          type: pserv
+          name: pgb-chat-db
+          envVarKey: DATABASE_URL
+      - key: OpenAI__ApiKey
+        fromSecretFile: ./openai_key.txt # Bạn sẽ tạo file secret trên Render
+
+  # ==========================================
+  # III. ĐỊNH NGHĨA API GATEWAY
+  # Đây là điểm truy cập công khai duy nhất của hệ thống.
+  # ==========================================
+  - name: pgb-apigateway
+    type: web
+    env: docker
+    dockerfilePath: ./PGB.ApiGateway/Dockerfile
+    envVars:
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: JwtSettings__SecretKey
+        fromService: # Dùng chung secret key với Auth service để xác thực token
+          type: web
+          name: pgb-auth-api
+          envVarKey: JwtSettings__SecretKey
+      # Render tự động tạo các biến môi trường để các service giao tiếp qua mạng nội bộ
+      - key: Services__auth__host
+        value: pgb-auth-api:8080
+      - key: Services__todo__host
+        value: pgb-todo-api:8080
+      - key: Services__chat__host
+        value: pgb-chat-api:8080
