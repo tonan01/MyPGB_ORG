@@ -22,14 +22,6 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
             _currentUserService = currentUserService;
         }
 
-        public override int SaveChanges()
-        {
-            UpdateAuditableEntities();
-            var result = base.SaveChanges();
-            DispatchDomainEvents().GetAwaiter().GetResult();
-            return result;
-        }
-
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             UpdateAuditableEntities();
@@ -113,9 +105,6 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
                         b.Property(nameof(BaseEntity<Guid>.DeletedBy)).HasMaxLength(100);
                         // Configure RowVersion concurrency token if present
                         b.Property("RowVersion").IsRowVersion();
-
-                        // Ignore DomainEvents for EF
-                        //b.Ignore(nameof(BaseEntity<Guid>.DomainEvents));
                     });
                 }
             }

@@ -19,6 +19,6 @@ namespace PGB.BuildingBlocks.Application.Commands
         public Guid UserId { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         #endregion
-    } 
+    }
     #endregion
 }
