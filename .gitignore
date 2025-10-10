@@ -374,3 +374,7 @@ FodyWeavers.xsd
 
 # File cấu hình của service Chat có thể chứa key OpenAI
 PGB.Chat.Api/appsettings.json
+/PGB.Auth.Api/appsettings.Development.json
+/PGB.ApiGateway/appsettings.Development.json
+/PGB.Chat.Api/appsettings.Development.json
+/PGB.Todo.Api/appsettings.Development.json
