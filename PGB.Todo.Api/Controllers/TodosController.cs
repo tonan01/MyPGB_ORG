@@ -6,6 +6,7 @@ using PGB.Todo.Application.Queries;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using PGB.BuildingBlocks.Domain.Interfaces;
 
 namespace PGB.Todo.Api.Controllers
 {
@@ -16,23 +17,32 @@ namespace PGB.Todo.Api.Controllers
     public class TodosController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly ICurrentUserService _currentUserService;
 
-        public TodosController(IMediator mediator)
+        // Cập nhật Constructor để Inject ICurrentUserService
+        public TodosController(IMediator mediator, ICurrentUserService currentUserService)
         {
             _mediator = mediator;
+            _currentUserService = currentUserService;
         }
 
-        private Guid GetCurrentUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        private Guid GetCurrentUserId()
+        {
+            var userIdString = _currentUserService.GetCurrentUsername();
+            if (Guid.TryParse(userIdString, out var userId))
+            {
+                return userId;
+            }
+            return Guid.Empty;
+        }
 
         [HttpGet]
-        // --- CẬP NHẬT THAM SỐ CỦA ACTION ---
         public async Task<IActionResult> Get([FromQuery] GetTodoItemsQuery query)
         {
             query.UserId = GetCurrentUserId();
             var result = await _mediator.Send(query);
             return Ok(result);
         }
-        // ...
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateTodoItemCommand command)

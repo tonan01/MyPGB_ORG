@@ -10,10 +10,12 @@ services:
     restart: always
     environment:
       POSTGRES_USER: user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # <-- Đọc từ file .env
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: PGB_AuthDb
     volumes:
       - auth_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d PGB_AuthDb"]
       interval: 10s
@@ -25,10 +27,12 @@ services:
     restart: always
     environment:
       POSTGRES_USER: user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # <-- Đọc từ file .env
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: PGB_TodoDb
     volumes:
       - todo_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d PGB_TodoDb"]
       interval: 10s
@@ -40,10 +44,12 @@ services:
     restart: always
     environment:
       POSTGRES_USER: user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # <-- Đọc từ file .env
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: PGB_ChatDb
     volumes:
       - chat_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d PGB_ChatDb"]
       interval: 10s
@@ -51,9 +57,8 @@ services:
       retries: 5
 
   # ====================================================================
-  # II. DỊCH VỤ AUTH API
+  # II. DỊCH VỤ APIs VÀ GATEWAY
   # ====================================================================
-
   pgb.auth.api:
     build:
       context: .
@@ -61,17 +66,13 @@ services:
     ports:
       - "7001:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Production # <-- Chuyển sang Production
+      ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=db_auth;Port=5432;Username=user;Password=${POSTGRES_PASSWORD};Database=PGB_AuthDb
-      JwtSettings__SecretKey: ${JWT_SECRETKEY} # <-- Đọc từ file .env
+      JwtSettings__SecretKey: ${JWT_SECRETKEY}
     depends_on:
       db_auth:
         condition: service_healthy
-
-  # ====================================================================
-  # III. DỊCH VỤ TODO API
-  # ====================================================================
 
   pgb.todo.api:
     build:
@@ -87,10 +88,6 @@ services:
       db_todo:
         condition: service_healthy
 
-  # ====================================================================
-  # IV. DỊCH VỤ CHAT API
-  # ====================================================================
-
   pgb.chat.api:
     build:
       context: .
@@ -101,14 +98,10 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=db_chat;Port=5432;Username=user;Password=${POSTGRES_PASSWORD};Database=PGB_ChatDb
-      OpenAI__ApiKey: ${OPENAI_APIKEY} # <-- Đọc từ file .env
+      OpenAI__ApiKey: ${OPENAI_APIKEY}
     depends_on:
       db_chat:
         condition: service_healthy
-
-  # ====================================================================
-  # V. API GATEWAY
-  # ====================================================================
 
   pgb.apigateway:
     build:
@@ -119,7 +112,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      JwtSettings__SecretKey: ${JWT_SECRETKEY} # <-- Đọc từ file .env
+      JwtSettings__SecretKey: ${JWT_SECRETKEY}
       JwtSettings__Issuer: PGB_ORG
       JwtSettings__Audience: PGB_ORG_Users
     depends_on:
@@ -127,8 +120,20 @@ services:
       - pgb.todo.api
       - pgb.chat.api
 
+  # ====================================================================
+  # III. DỊCH VỤ FRONTEND (REACT/VITE) 
+  # ====================================================================
+  pgb.frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile # Tên file Dockerfile trong thư mục Frontend
+    ports:
+      - "5173:80" # Ánh xạ cổng 80 (Nginx) sang cổng 5173
+    depends_on:
+      - pgb.apigateway
+
 # ====================================================================
-# VI. VOLUMES (Lưu trữ dữ liệu DB lâu dài)
+# IV. VOLUMES
 # ====================================================================
 volumes:
   auth_data:
