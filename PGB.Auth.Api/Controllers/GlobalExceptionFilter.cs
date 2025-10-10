@@ -8,6 +8,7 @@ namespace PGB.Auth.Api.Controllers
 {
     public class GlobalExceptionFilter : IExceptionFilter
     {
+        #region Methods
         public void OnException(ExceptionContext context)
         {
             var traceId = context.HttpContext.TraceIdentifier;
@@ -56,6 +57,7 @@ namespace PGB.Auth.Api.Controllers
 
             context.Result = new ObjectResult(errorResponse) { StatusCode = statusCode };
             context.ExceptionHandled = true;
-        }
+        } 
+        #endregion
     }
 }

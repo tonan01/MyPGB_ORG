@@ -6,18 +6,22 @@ namespace PGB.BuildingBlocks.WebApi.Common.Extensions
 {
     public static class ApplicationBuilderExtensions
     {
+        #region .NET Core 3.1 - .NET 5
         public static IApplicationBuilder UseWebApiCommon(this IApplicationBuilder app)
         {
             app.UseMiddleware<CorrelationIdMiddleware>();
-            app.UseMiddleware<UserClaimsMiddleware>(); // <-- THÊM DÒNG NÀY
+            app.UseMiddleware<UserClaimsMiddleware>();
             return app;
-        }
+        } 
+        #endregion
 
+        #region .NET 6+ Minimal Hosting Model
         public static WebApplication UseWebApiCommon(this WebApplication app)
         {
             app.UseMiddleware<CorrelationIdMiddleware>();
-            app.UseMiddleware<UserClaimsMiddleware>(); // <-- THÊM DÒNG NÀY
+            app.UseMiddleware<UserClaimsMiddleware>();
             return app;
-        }
+        } 
+        #endregion
     }
 }

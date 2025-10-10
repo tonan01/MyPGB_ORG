@@ -13,17 +13,22 @@ namespace PGB.Chat.Application.Commands.Handlers
 {
     public class SendChatMessageCommandHandler : ICommandHandler<SendChatMessageCommand, ChatMessageDto>
     {
+        #region Fields
         private readonly IChatRepository _chatRepository;
         private readonly IAiChatService _aiChatService;
         private readonly IMapper _mapper;
+        #endregion
 
+        #region Constructor
         public SendChatMessageCommandHandler(IChatRepository chatRepository, IAiChatService aiChatService, IMapper mapper)
         {
             _chatRepository = chatRepository;
             _aiChatService = aiChatService;
             _mapper = mapper;
         }
+        #endregion
 
+        #region Methods
         public async Task<ChatMessageDto> Handle(SendChatMessageCommand request, CancellationToken cancellationToken)
         {
             Conversation conversation;
@@ -60,6 +65,7 @@ namespace PGB.Chat.Application.Commands.Handlers
 
             // 6. Trả về tin nhắn của AI cho client
             return _mapper.Map<ChatMessageDto>(assistantMessage);
-        }
+        } 
+        #endregion
     }
 }

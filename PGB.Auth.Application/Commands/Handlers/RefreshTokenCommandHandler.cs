@@ -12,23 +12,28 @@ namespace PGB.Auth.Application.Commands.Handlers
 {
     public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, RefreshTokenResponse>
     {
+        #region Dependencies
         private readonly IUserRepository _userRepository;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IUserDomainService _userDomainService;
         private readonly SecuritySettings _securitySettings;
+        #endregion
 
+        #region Constructor
         public RefreshTokenCommandHandler(
-            IUserRepository userRepository,
-            IJwtTokenService jwtTokenService,
-            IUserDomainService userDomainService,
-            SecuritySettings securitySettings)
+           IUserRepository userRepository,
+           IJwtTokenService jwtTokenService,
+           IUserDomainService userDomainService,
+           SecuritySettings securitySettings)
         {
             _userRepository = userRepository;
             _jwtTokenService = jwtTokenService;
             _userDomainService = userDomainService;
             _securitySettings = securitySettings;
         }
+        #endregion
 
+        #region Handle Method
         public async Task<RefreshTokenResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
             var oldRefreshToken = await _userRepository.GetRefreshTokenAsync(request.RefreshToken, cancellationToken);
@@ -66,6 +71,7 @@ namespace PGB.Auth.Application.Commands.Handlers
                 AccessTokenExpiresAt = newAccessToken.ExpiresAt,
                 RefreshTokenExpiresAt = newRefreshToken.ExpiresAt
             };
-        }
+        } 
+        #endregion
     }
 }

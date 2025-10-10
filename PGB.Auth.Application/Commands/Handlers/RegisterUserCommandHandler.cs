@@ -15,23 +15,28 @@ namespace PGB.Auth.Application.Commands.Handlers
 {
     public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, RegisterUserResponse>
     {
+        #region Dependencies
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IUserDomainService _userDomainService;
         private readonly SecuritySettings _securitySettings;
+        #endregion
 
+        #region Constructor
         public RegisterUserCommandHandler(
-            IUserRepository userRepository,
-            IPasswordHasher passwordHasher,
-            IUserDomainService userDomainService,
-            SecuritySettings securitySettings)
+          IUserRepository userRepository,
+          IPasswordHasher passwordHasher,
+          IUserDomainService userDomainService,
+          SecuritySettings securitySettings)
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
             _userDomainService = userDomainService;
             _securitySettings = securitySettings;
         }
+        #endregion
 
+        #region Handle Method
         public async Task<RegisterUserResponse> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
             // 1. Validate input
@@ -83,6 +88,7 @@ namespace PGB.Auth.Application.Commands.Handlers
 
             if (!_userDomainService.IsPasswordStrong(request.Password))
                 throw new ValidationException("Mật khẩu không đủ mạnh");
-        }
+        } 
+        #endregion
     }
 }

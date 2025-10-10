@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PGB.BuildingBlocks.Domain.Interfaces;
 using PGB.Chat.Application.Commands;
 using PGB.Chat.Application.Queries;
 using System;
@@ -15,15 +16,32 @@ namespace PGB.Chat.Api.Controllers
     [Authorize]
     public class ChatController : ControllerBase
     {
+        #region Fields
         private readonly IMediator _mediator;
+        private readonly ICurrentUserService _currentUserService;
+        #endregion
 
-        public ChatController(IMediator mediator)
+        #region Constructor
+        public ChatController(IMediator mediator, ICurrentUserService currentUserService)
         {
             _mediator = mediator;
+            _currentUserService = currentUserService;
         }
+        #endregion
 
-        private Guid GetCurrentUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        #region Private Methods
+        private Guid GetCurrentUserId()
+        {
+            var userIdString = _currentUserService.GetCurrentUsername();
+            if (Guid.TryParse(userIdString, out var userId))
+            {
+                return userId;
+            }
+            return Guid.Empty;
+        }
+        #endregion
 
+        #region Public Methods
         [HttpPost]
         public async Task<IActionResult> SendMessage([FromBody] SendChatMessageCommand command)
         {
@@ -50,6 +68,7 @@ namespace PGB.Chat.Api.Controllers
             };
             var result = await _mediator.Send(query);
             return Ok(result);
-        }
+        } 
+        #endregion
     }
 }

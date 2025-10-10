@@ -6,11 +6,17 @@ namespace PGB.Chat.Domain.Entities
 {
     public class Conversation : AggregateRoot
     {
+        #region Properties
         public Guid UserId { get; private set; }
         public string Title { get; private set; } = string.Empty;
+        #endregion
 
+        #region Navigation Properties
         public virtual ICollection<ChatMessage> Messages { get; private set; } = new List<ChatMessage>();
 
+        #endregion
+
+        #region Constructor
         protected Conversation() { }
 
         public static Conversation Start(Guid userId, string title, string createdBy)
@@ -22,7 +28,9 @@ namespace PGB.Chat.Domain.Entities
                 CreatedBy = createdBy
             };
         }
+        #endregion
 
+        #region Methods
         public void AddMessage(ChatMessage message)
         {
             Messages.Add(message);
@@ -32,6 +40,7 @@ namespace PGB.Chat.Domain.Entities
         {
             Title = newTitle;
             MarkAsUpdated(updatedBy);
-        }
+        } 
+        #endregion
     }
 }

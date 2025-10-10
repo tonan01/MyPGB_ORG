@@ -8,6 +8,7 @@ namespace PGB.Todo.Infrastructure.Persistence
 {
     public class DesignTimeTodoDbContextFactory : IDesignTimeDbContextFactory<TodoDbContext>
     {
+        #region Methods
         public TodoDbContext CreateDbContext(string[] args)
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
@@ -35,7 +36,8 @@ namespace PGB.Todo.Infrastructure.Persistence
                 sql.MigrationsAssembly(typeof(TodoDbContext).Assembly.FullName);
             });
 
-            return new TodoDbContext(builder.Options);
+            return new TodoDbContext(builder.Options); 
+            #endregion
         }
     }
 }

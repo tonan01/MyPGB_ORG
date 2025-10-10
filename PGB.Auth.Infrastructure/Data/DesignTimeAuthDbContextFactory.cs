@@ -8,6 +8,7 @@ namespace PGB.Auth.Infrastructure.Data
 {
     public class DesignTimeAuthDbContextFactory : IDesignTimeDbContextFactory<AuthDbContext>
     {
+        #region Methods
         public AuthDbContext CreateDbContext(string[] args)
         {
             // Lấy môi trường hiện tại, mặc định là "Development" khi chạy từ local
@@ -38,6 +39,7 @@ namespace PGB.Auth.Infrastructure.Data
             });
 
             return new AuthDbContext(optionsBuilder.Options);
-        }
+        } 
+        #endregion
     }
 }

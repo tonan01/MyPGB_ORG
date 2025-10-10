@@ -8,6 +8,7 @@ namespace PGB.Chat.Infrastructure.Persistence
 {
     public class DesignTimeChatDbContextFactory : IDesignTimeDbContextFactory<ChatDbContext>
     {
+        #region Methods
         public ChatDbContext CreateDbContext(string[] args)
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
@@ -36,6 +37,7 @@ namespace PGB.Chat.Infrastructure.Persistence
             });
 
             return new ChatDbContext(builder.Options);
-        }
+        } 
+        #endregion
     }
 }

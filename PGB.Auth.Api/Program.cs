@@ -10,7 +10,7 @@ using PGB.Auth.Infrastructure.Services;
 using PGB.BuildingBlocks.Application.Extensions;
 using PGB.BuildingBlocks.WebApi.Common.Extensions;
 using System.Reflection;
-using PGB.Auth.Infrastructure; // <-- Thêm using này để gọi DbInitializer
+using PGB.Auth.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,7 +80,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// --- BẮT ĐẦU: Code tự động Apply Migrations và Seed Data (phiên bản mới, gọn gàng) ---
+#region Database Initialization
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -88,15 +88,14 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<AuthDbContext>();
-        // Gọi đến class DbInitializer mới tạo
         await DbInitializer.InitializeAsync(context, logger);
     }
     catch (Exception ex)
     {
         logger.LogError(ex, "An error occurred while initializing the database.");
     }
-}
-// --- KẾT THÚC ---
+} 
+#endregion
 
 app.UseWebApiCommon();
 app.UseAuthentication();

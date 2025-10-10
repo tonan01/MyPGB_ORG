@@ -4,6 +4,8 @@ namespace PGB.BuildingBlocks.Domain.Interfaces
 {
     public interface ICurrentUserService
     {
-        string? GetCurrentUsername();
+        #region Methods
+        string? GetCurrentUsername(); 
+        #endregion
     }
 }

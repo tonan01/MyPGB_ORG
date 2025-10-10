@@ -18,15 +18,26 @@ namespace PGB.Auth.Api.Controllers
     [Authorize]
     public class UserController : ControllerBase
     {
+        #region Fields
         private readonly IMediator _mediator;
+        #endregion
 
+        #region Constructor
         public UserController(IMediator mediator)
         {
             _mediator = mediator;
         }
+        #endregion
 
-        private Guid GetCurrentUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        #region Helpers
+        private Guid GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        } 
+        #endregion
 
+        #region Endpoints
         [HttpGet("me")]
         public async Task<ActionResult<UserDto>> Me()
         {
@@ -70,6 +81,7 @@ namespace PGB.Auth.Api.Controllers
             };
             await _mediator.Send(command);
             return NoContent();
-        }
+        } 
+        #endregion
     }
 }

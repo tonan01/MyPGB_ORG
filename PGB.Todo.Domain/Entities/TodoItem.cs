@@ -10,14 +10,16 @@ namespace PGB.Todo.Domain.Entities
 {
     public class TodoItem : AggregateRoot
     {
+        #region Properties
         public string Title { get; private set; } = string.Empty;
         public string Description { get; private set; } = string.Empty;
         public bool IsCompleted { get; private set; } = false;
         public DateTime? DueDate { get; private set; }
         public Priority Priority { get; private set; } = Priority.Medium;
-        public Guid UserId { get; private set; } // Reference to user from Auth service
+        public Guid UserId { get; private set; } // Reference to user from Auth service 
+        #endregion
 
-        // Constructor for EF
+        #region Constructor
         protected TodoItem() { }
 
         public static TodoItem Create(string title, string description, Guid userId,
@@ -38,7 +40,9 @@ namespace PGB.Todo.Domain.Entities
 
             return todoItem;
         }
+        #endregion
 
+        #region Methods
         public void Update(string title, string description, DateTime? dueDate, Priority priority, string updatedBy)
         {
             Title = title;
@@ -61,14 +65,17 @@ namespace PGB.Todo.Domain.Entities
         {
             IsCompleted = false;
             MarkAsUpdated(updatedBy);
-        }
+        } 
+        #endregion
     }
 
+    #region Enums
     public enum Priority
     {
         Low = 1,
         Medium = 2,
         High = 3,
         Urgent = 4
-    }
+    } 
+    #endregion
 }

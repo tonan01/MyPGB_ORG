@@ -12,13 +12,18 @@ namespace PGB.Chat.Infrastructure.Repositories
 {
     public class ChatRepository : IChatRepository
     {
+        #region Fields
         private readonly ChatDbContext _context;
+        #endregion
 
+        #region Constructor
         public ChatRepository(ChatDbContext context)
         {
             _context = context;
         }
+        #endregion
 
+        #region Methods
         public async Task<Conversation?> GetConversationByIdAsync(Guid id, bool includeMessages = false)
         {
             IQueryable<Conversation> query = _context.Conversations;
@@ -53,6 +58,7 @@ namespace PGB.Chat.Infrastructure.Repositories
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {
             return await _context.SaveChangesAsync(cancellationToken);
-        }
+        } 
+        #endregion
     }
 }

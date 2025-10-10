@@ -34,6 +34,7 @@ namespace PGB.Auth.Infrastructure.Services
         }
         #endregion
 
+        #region Generate Token
         public JwtToken GenerateAccessToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -77,7 +78,8 @@ namespace PGB.Auth.Infrastructure.Services
                 ExpiresAt = expiresAt,
                 TokenType = "Bearer"
             };
-        }
+        } 
+        #endregion
 
         #region Implementation
         public ClaimsPrincipal? ValidateToken(string token)

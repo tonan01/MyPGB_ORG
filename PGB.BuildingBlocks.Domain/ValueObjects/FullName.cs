@@ -61,11 +61,13 @@ namespace PGB.BuildingBlocks.Domain.ValueObjects
 
     internal static class StringExtensions
     {
+        #region ToTitleCase Extension Method
         public static string ToTitleCase(this string input)
         {
             if (string.IsNullOrEmpty(input))
                 return input;
             return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.ToLowerInvariant());
-        }
+        } 
+        #endregion
     }
 }

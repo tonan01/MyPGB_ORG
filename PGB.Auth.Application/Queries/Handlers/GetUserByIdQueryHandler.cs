@@ -6,7 +6,6 @@ using PGB.BuildingBlocks.Application.Queries;
 
 namespace PGB.Auth.Application.Queries.Handlers
 {
-    #region Get User By Id Query Handler
     public class GetUserByIdQueryHandler : IQueryHandler<GetUserByIdQuery, UserDto>
     {
         #region Dependencies
@@ -34,5 +33,4 @@ namespace PGB.Auth.Application.Queries.Handlers
         }
         #endregion
     }
-    #endregion
 }

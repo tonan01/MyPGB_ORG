@@ -11,6 +11,7 @@ namespace PGB.Auth.Infrastructure.Data
 {
     public static class DbInitializer
     {
+        #region InitializeAsync
         public static async Task InitializeAsync(AuthDbContext context, ILogger logger)
         {
             try
@@ -32,7 +33,9 @@ namespace PGB.Auth.Infrastructure.Data
                 throw;
             }
         }
+        #endregion
 
+        #region SeedRolesAsync
         private static async Task SeedRolesAsync(AuthDbContext context, ILogger logger)
         {
             // Chỉ seed khi bảng Roles chưa có dữ liệu
@@ -47,6 +50,7 @@ namespace PGB.Auth.Infrastructure.Data
                 await context.SaveChangesAsync();
                 logger.LogInformation("Default roles seeded successfully.");
             }
-        }
+        } 
+        #endregion
     }
 }

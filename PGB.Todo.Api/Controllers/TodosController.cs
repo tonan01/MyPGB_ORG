@@ -16,16 +16,20 @@ namespace PGB.Todo.Api.Controllers
     [Authorize]
     public class TodosController : ControllerBase
     {
+        #region Fields
         private readonly IMediator _mediator;
         private readonly ICurrentUserService _currentUserService;
+        #endregion
 
-        // Cập nhật Constructor để Inject ICurrentUserService
+        #region Constructor
         public TodosController(IMediator mediator, ICurrentUserService currentUserService)
         {
             _mediator = mediator;
             _currentUserService = currentUserService;
         }
+        #endregion
 
+        #region Private Methods
         private Guid GetCurrentUserId()
         {
             var userIdString = _currentUserService.GetCurrentUsername();
@@ -34,8 +38,10 @@ namespace PGB.Todo.Api.Controllers
                 return userId;
             }
             return Guid.Empty;
-        }
+        } 
+        #endregion
 
+        #region Actions
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] GetTodoItemsQuery query)
         {
@@ -76,6 +82,7 @@ namespace PGB.Todo.Api.Controllers
 
             await _mediator.Send(command);
             return NoContent();
-        }
+        } 
+        #endregion
     }
 }

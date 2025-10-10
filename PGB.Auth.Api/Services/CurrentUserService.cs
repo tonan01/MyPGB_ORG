@@ -5,13 +5,18 @@ namespace PGB.Auth.Api.Services
 {
     public class CurrentUserService : ICurrentUserService
     {
+        #region Fields
         private readonly IHttpContextAccessor _httpContextAccessor;
+        #endregion
 
+        #region Constructor
         public CurrentUserService(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
         }
+        #endregion
 
+        #region Methods
         public string? GetCurrentUsername()
         {
             var httpContext = _httpContextAccessor.HttpContext;
@@ -28,7 +33,8 @@ namespace PGB.Auth.Api.Services
             }
 
             return null;
-        }
+        } 
+        #endregion
     }
 }
 

@@ -6,8 +6,11 @@ namespace PGB.Auth.Infrastructure.Services
 {
     public class BcryptPasswordHasher : IPasswordHasher
     {
+        #region Properties
         public string Algorithm => "BCrypt";
+        #endregion
 
+        #region Methods
         public (string hash, string? salt) Hash(string plainPassword)
         {
             if (string.IsNullOrWhiteSpace(plainPassword))
@@ -40,6 +43,7 @@ namespace PGB.Auth.Infrastructure.Services
             // Optionally: check cost factor and decide rehash.
             // For BCrypt.Net, you can parse and inspect the work factor from the hash string if needed.
             return false;
-        }
+        } 
+        #endregion
     }
 }

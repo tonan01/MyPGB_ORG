@@ -12,15 +12,20 @@ namespace PGB.Chat.Application.Queries.Handlers
 {
     public class GetConversationHistoryQueryHandler : IQueryHandler<GetConversationHistoryQuery, List<ChatMessageDto>>
     {
+        #region 
         private readonly IChatRepository _chatRepository;
         private readonly IMapper _mapper;
+        #endregion
 
+        #region Constructor
         public GetConversationHistoryQueryHandler(IChatRepository chatRepository, IMapper mapper)
         {
             _chatRepository = chatRepository;
             _mapper = mapper;
         }
+        #endregion
 
+        #region Methods
         public async Task<List<ChatMessageDto>> Handle(GetConversationHistoryQuery request, CancellationToken cancellationToken)
         {
             var conversation = await _chatRepository.GetConversationByIdAsync(request.ConversationId, includeMessages: true);
@@ -31,6 +36,7 @@ namespace PGB.Chat.Application.Queries.Handlers
             }
 
             return _mapper.Map<List<ChatMessageDto>>(conversation.Messages.OrderBy(m => m.CreatedAt));
-        }
+        } 
+        #endregion
     }
 }

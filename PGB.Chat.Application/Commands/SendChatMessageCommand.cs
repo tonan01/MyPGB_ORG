@@ -6,12 +6,14 @@ namespace PGB.Chat.Application.Commands
 {
     public class SendChatMessageCommand : BaseCommand<ChatMessageDto>
     {
+        #region Properties
         // Nếu có, gửi tin nhắn vào cuộc hội thoại đã có
         public Guid? ConversationId { get; set; }
 
         // Nội dung câu hỏi của người dùng
         public string Prompt { get; set; } = string.Empty;
 
-        // UserId được kế thừa từ BaseCommand
+        // UserId được kế thừa từ BaseCommand 
+        #endregion
     }
 }

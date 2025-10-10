@@ -12,13 +12,33 @@ namespace PGB.Auth.Api.Controllers
     [Route("api/v{version:apiVersion}/[controller]")]
     public class AuthController : ControllerBase
     {
+        #region Fields
         private readonly IMediator _mediator;
+        #endregion
 
+        #region Constructor
         public AuthController(IMediator mediator)
         {
             _mediator = mediator;
         }
+        #endregion
 
+        #region Helpers
+        private Guid GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        }
+
+        private string GetClientIpAddress()
+        {
+            return Request.Headers.ContainsKey("X-Forwarded-For")
+                ? Request.Headers["X-Forwarded-For"].ToString().Split(',')[0].Trim()
+                : HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+        }
+        #endregion
+
+        #region Endpoints
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<ActionResult> Register([FromBody] RegisterUserCommand command)
@@ -52,14 +72,6 @@ namespace PGB.Auth.Api.Controllers
             return Ok(response);
         }
 
-        [HttpPost("refresh")]
-        [AllowAnonymous]
-        public async Task<ActionResult<RefreshTokenResponse>> Refresh([FromBody] RefreshTokenCommand command)
-        {
-            var result = await _mediator.Send(command);
-            return Ok(result);
-        }
-
         [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> Logout([FromBody] LogoutCommand command)
@@ -67,6 +79,16 @@ namespace PGB.Auth.Api.Controllers
             command.UserId = GetCurrentUserId();
             await _mediator.Send(command);
             return Ok(new { message = "Đăng xuất thành công" });
+        }
+        #endregion
+
+        #region Token Management
+        [HttpPost("refresh")]
+        [AllowAnonymous]
+        public async Task<ActionResult<RefreshTokenResponse>> Refresh([FromBody] RefreshTokenCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
 
         [HttpPost("logout-all")]
@@ -81,18 +103,6 @@ namespace PGB.Auth.Api.Controllers
             await _mediator.Send(command);
             return Ok(new { message = "Đã đăng xuất khỏi tất cả thiết bị" });
         }
-
-        private Guid GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
-        }
-
-        private string GetClientIpAddress()
-        {
-            return Request.Headers.ContainsKey("X-Forwarded-For")
-                ? Request.Headers["X-Forwarded-For"].ToString().Split(',')[0].Trim()
-                : HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
-        }
+        #endregion
     }
 }

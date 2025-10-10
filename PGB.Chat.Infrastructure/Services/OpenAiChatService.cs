@@ -10,15 +10,18 @@ namespace PGB.Chat.Infrastructure.Services
 {
     public class OpenAiChatService : IAiChatService
     {
+        #region Fields
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
         private readonly string _modelName;
         private readonly ILogger<OpenAiChatService>? _logger;
+        #endregion
 
+        #region Constructor
         public OpenAiChatService(
-            IHttpClientFactory httpClientFactory,
-            IConfiguration configuration,
-            ILogger<OpenAiChatService>? logger = null)
+           IHttpClientFactory httpClientFactory,
+           IConfiguration configuration,
+           ILogger<OpenAiChatService>? logger = null)
         {
             _logger = logger;
             _httpClient = httpClientFactory.CreateClient();
@@ -32,10 +35,12 @@ namespace PGB.Chat.Infrastructure.Services
             _httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", _apiKey);
         }
+        #endregion
 
+        #region Methods
         public async Task<string> GetChatCompletionAsync(
-            IEnumerable<ChatMessage> history,
-            string userPrompt)
+           IEnumerable<ChatMessage> history,
+           string userPrompt)
         {
             try
             {
@@ -89,7 +94,8 @@ namespace PGB.Chat.Infrastructure.Services
                 _logger?.LogError(ex, "Error calling OpenAI API");
                 throw new Exception($"AI service error: {ex.Message}", ex);
             }
-        }
+        } 
+        #endregion
 
         #region Response Models
         private class OpenAiResponse

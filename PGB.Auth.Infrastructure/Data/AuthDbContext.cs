@@ -7,7 +7,6 @@ namespace PGB.Auth.Infrastructure.Data
 {
     public class AuthDbContext : BaseDbContext
     {
-        // ... (Constructor giữ nguyên) ...
         #region Constructor
         public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options)
         {
@@ -23,11 +22,8 @@ namespace PGB.Auth.Infrastructure.Data
         public DbSet<User> Users { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
-        // --- PHẦN CẬP NHẬT ---
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
-        // --- KẾT THÚC CẬP NHẬT ---
-
         #endregion
 
         #region Model Configuration
@@ -35,10 +31,9 @@ namespace PGB.Auth.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // User Configuration (giữ nguyên)
+            // User Configuration
             modelBuilder.Entity<User>(entity =>
             {
-                // ... (giữ nguyên tất cả cấu hình của User)
                 entity.HasKey(e => e.Id);
 
                 // Username Value Object
@@ -128,7 +123,6 @@ namespace PGB.Auth.Infrastructure.Data
                 entity.HasIndex(e => e.IsDeleted).HasDatabaseName("IX_RefreshTokens_IsDeleted");
             });
 
-            // --- PHẦN CẬP NHẬT MỚI ---
             modelBuilder.Entity<Role>(entity =>
             {
                 entity.HasKey(r => r.Id);
@@ -150,7 +144,6 @@ namespace PGB.Auth.Infrastructure.Data
                     .HasForeignKey(ur => ur.RoleId)
                     .IsRequired();
             });
-            // --- KẾT THÚC CẬP NHẬT MỚI ---
         }
         #endregion
     }

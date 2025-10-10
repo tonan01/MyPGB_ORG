@@ -12,6 +12,7 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
         private readonly IMediator? _mediator;
         private readonly ICurrentUserService? _currentUserService;
 
+        #region Constructors
         protected BaseDbContext(DbContextOptions options) : base(options)
         {
         }
@@ -20,15 +21,20 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
         {
             _mediator = mediator;
             _currentUserService = currentUserService;
-        }
+        } 
+        #endregion
 
+        #region SaveChanges Overrides
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             UpdateAuditableEntities();
             var result = await base.SaveChangesAsync(cancellationToken);
             await DispatchDomainEvents();
             return result;
-        }
+        } 
+        #endregion
+
+        #region Model Configuration
 
         private void UpdateAuditableEntities()
         {
@@ -78,7 +84,7 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Global query filter for soft delete
+            #region Soft Delete Query Filter
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 if (typeof(BaseEntity<Guid>).IsAssignableFrom(entityType.ClrType))
@@ -92,8 +98,9 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
                     modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
                 }
             }
+            #endregion
 
-            // Configure audit fields for all BaseEntity types
+            #region Audit Fields Configuration
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 if (typeof(BaseEntity<Guid>).IsAssignableFrom(entityType.ClrType))
@@ -108,6 +115,8 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
                     });
                 }
             }
-        }
+            #endregion
+        } 
+        #endregion
     }
 }

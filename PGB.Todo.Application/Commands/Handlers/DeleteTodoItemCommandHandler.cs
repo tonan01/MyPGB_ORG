@@ -9,13 +9,18 @@ namespace PGB.Todo.Application.Commands.Handlers
 {
     public class DeleteTodoItemCommandHandler : ICommandHandler<DeleteTodoItemCommand>
     {
+        #region Fields
         private readonly ITodoRepository _todoRepository;
+        #endregion
 
+        #region Constructor
         public DeleteTodoItemCommandHandler(ITodoRepository todoRepository)
         {
             _todoRepository = todoRepository;
         }
+        #endregion
 
+        #region Methods
         public async Task Handle(DeleteTodoItemCommand request, CancellationToken cancellationToken)
         {
             var todoItem = await _todoRepository.GetByIdAsync(request.Id);
@@ -33,6 +38,7 @@ namespace PGB.Todo.Application.Commands.Handlers
 
             _todoRepository.Delete(todoItem);
             await _todoRepository.SaveChangesAsync(cancellationToken);
-        }
+        } 
+        #endregion
     }
 }

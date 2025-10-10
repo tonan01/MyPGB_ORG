@@ -6,6 +6,7 @@ namespace PGB.Auth.Domain.Entities
 {
     public class RefreshToken : BaseEntity
     {
+        #region Properties
         public string Token { get; private set; } = string.Empty;
         public Guid UserId { get; private set; }
         public DateTime ExpiresAt { get; private set; }
@@ -16,7 +17,9 @@ namespace PGB.Auth.Domain.Entities
         public string? RevokedBy { get; private set; }
 
         public virtual User User { get; private set; } = null!;
+        #endregion
 
+        #region Constructors
         protected RefreshToken() { }
 
         private RefreshToken(Guid userId, string token, DateTime expiresAt, string createdBy)
@@ -26,7 +29,9 @@ namespace PGB.Auth.Domain.Entities
             ExpiresAt = expiresAt;
             CreatedBy = createdBy;
         }
+        #endregion
 
+        #region Methods
         public static RefreshToken Create(Guid userId, string token, DateTime expiresAt, string createdBy)
         {
             if (string.IsNullOrWhiteSpace(token))
@@ -53,8 +58,11 @@ namespace PGB.Auth.Domain.Entities
             RevokeReason = reason;
             MarkAsUpdated(revokedBy);
         }
+        #endregion
 
+        #region Status Properties
         public bool IsExpired => ExpiresAt <= DateTime.UtcNow;
-        public bool IsValid => !IsUsed && !IsRevoked && !IsExpired && !IsDeleted;
+        public bool IsValid => !IsUsed && !IsRevoked && !IsExpired && !IsDeleted; 
+        #endregion
     }
 }

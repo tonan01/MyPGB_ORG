@@ -8,8 +8,10 @@ namespace PGB.Chat.Application.Mappings
     {
         public ChatMappingProfile()
         {
+            #region Mappings
             CreateMap<Conversation, ConversationDto>();
-            CreateMap<ChatMessage, ChatMessageDto>();
+            CreateMap<ChatMessage, ChatMessageDto>(); 
+            #endregion
         }
     }
 }

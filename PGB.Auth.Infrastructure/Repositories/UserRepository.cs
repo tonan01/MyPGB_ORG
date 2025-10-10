@@ -14,12 +14,16 @@ namespace PGB.Auth.Infrastructure.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        private readonly AuthDbContext _context;
+        #region Dependencies
+        private readonly AuthDbContext _context; 
+        #endregion
 
+        #region Constructor
         public UserRepository(AuthDbContext context)
         {
             _context = context;
-        }
+        } 
+        #endregion
 
         #region Basic CRUD Operations
         public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -87,8 +91,6 @@ namespace PGB.Auth.Infrastructure.Repositories
         {
             query.ValidateAndNormalize();
             var queryable = _context.Users.AsQueryable();
-
-            // ... (Phần logic query giữ nguyên) ...
 
             var totalCount = await queryable.CountAsync(cancellationToken);
             var users = await queryable

@@ -8,7 +8,9 @@ namespace PGB.Todo.Application.Mappings
     {
         public TodoMappingProfile()
         {
-            CreateMap<TodoItem, TodoItemDto>();
+            #region Mappings
+            CreateMap<TodoItem, TodoItemDto>(); 
+            #endregion
         }
     }
 }

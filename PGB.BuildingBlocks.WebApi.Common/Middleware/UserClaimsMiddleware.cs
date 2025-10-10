@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging; // THÊM USING NÀY
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq; // THÊM USING NÀY
+using System.Linq; 
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -11,16 +11,20 @@ namespace PGB.BuildingBlocks.WebApi.Common.Middleware
 {
     public class UserClaimsMiddleware
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<UserClaimsMiddleware> _logger; // THÊM LOGGER
+        #region Fields
+        private readonly RequestDelegate _next;       
+        private readonly ILogger<UserClaimsMiddleware> _logger;
+        #endregion
 
-        // CẬP NHẬT CONSTRUCTOR
+        #region Constructor
         public UserClaimsMiddleware(RequestDelegate next, ILogger<UserClaimsMiddleware> logger)
         {
             _next = next;
             _logger = logger;
         }
+        #endregion
 
+        #region InvokeAsync Method
         public async Task InvokeAsync(HttpContext context)
         {
             _logger.LogInformation("--- UserClaimsMiddleware START ---");
@@ -70,6 +74,7 @@ namespace PGB.BuildingBlocks.WebApi.Common.Middleware
             _logger.LogInformation("--- UserClaimsMiddleware END ---");
 
             await _next(context);
-        }
+        } 
+        #endregion
     }
 }

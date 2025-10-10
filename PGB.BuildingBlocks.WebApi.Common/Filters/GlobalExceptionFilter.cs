@@ -8,6 +8,7 @@ namespace PGB.BuildingBlocks.WebApi.Common.Filters
 {
     public class GlobalExceptionFilter : IExceptionFilter
     {
+        #region Methods
         public void OnException(ExceptionContext context)
         {
             var traceId = context.HttpContext.TraceIdentifier;
@@ -69,7 +70,8 @@ namespace PGB.BuildingBlocks.WebApi.Common.Filters
 
             context.Result = new ObjectResult(genericResult) { StatusCode = 500 };
             context.ExceptionHandled = true;
-        }
+        } 
+        #endregion
     }
 }
 

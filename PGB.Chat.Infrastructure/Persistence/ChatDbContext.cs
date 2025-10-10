@@ -6,11 +6,16 @@ namespace PGB.Chat.Infrastructure.Persistence
 {
     public class ChatDbContext : BaseDbContext
     {
+        #region Constructor
         public ChatDbContext(DbContextOptions<ChatDbContext> options) : base(options) { }
+        #endregion
 
+        #region DbSets
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        #endregion
 
+        #region Model Configuration
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -30,6 +35,7 @@ namespace PGB.Chat.Infrastructure.Persistence
                 entity.HasKey(m => m.Id);
                 entity.Property(m => m.Content).IsRequired();
             });
-        }
+        } 
+        #endregion
     }
 }

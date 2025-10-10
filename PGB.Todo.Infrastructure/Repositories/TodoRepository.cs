@@ -14,13 +14,18 @@ namespace PGB.Todo.Infrastructure.Repositories
 {
     public class TodoRepository : ITodoRepository
     {
+        #region Fields
         private readonly TodoDbContext _context;
+        #endregion
 
+        #region Constructor
         public TodoRepository(TodoDbContext context)
         {
             _context = context;
         }
+        #endregion
 
+        #region Methods
         public async Task<TodoItem?> GetByIdAsync(Guid id)
         {
             return await _context.TodoItems.FindAsync(id);
@@ -70,6 +75,7 @@ namespace PGB.Todo.Infrastructure.Repositories
                                 .ToListAsync();
 
             return new PagedResult<TodoItem>(items, totalCount, query.Page, query.PageSize);
-        }
+        } 
+        #endregion
     }
 }

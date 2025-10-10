@@ -1,13 +1,11 @@
 ﻿namespace PGB.BuildingBlocks.Domain.Common
 {
-    /// <summary>
-    /// Defines application-wide roles as constants to ensure consistency and avoid magic strings.
-    /// This class is shared across all services.
-    /// </summary>
     public static class AppRoles
     {
+        #region Constants
         public const string Admin = "Admin";
         public const string Manager = "Manager";
-        public const string User = "User";
+        public const string User = "User"; 
+        #endregion
     }
 }

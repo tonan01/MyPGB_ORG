@@ -9,13 +9,18 @@ namespace PGB.Auth.Application.Commands.Handlers
 {
     public class UpdateMyProfileCommandHandler : ICommandHandler<UpdateMyProfileCommand>
     {
+        #region Dependencies
         private readonly IUserRepository _userRepository;
+        #endregion
 
+        #region Constructor
         public UpdateMyProfileCommandHandler(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }
+        #endregion
 
+        #region Handle Method
         public async Task Handle(UpdateMyProfileCommand request, CancellationToken cancellationToken)
         {
             var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
@@ -32,6 +37,7 @@ namespace PGB.Auth.Application.Commands.Handlers
 
             // Không cần gọi _userRepository.UpdateAsync vì DbContext sẽ tự động theo dõi thay đổi
             await _userRepository.SaveChangesAsync(cancellationToken);
-        }
+        } 
+        #endregion
     }
 }

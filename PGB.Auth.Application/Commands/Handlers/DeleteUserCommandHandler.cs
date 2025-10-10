@@ -9,13 +9,18 @@ namespace PGB.Auth.Application.Commands.Handlers
 {
     public class DeleteUserCommandHandler : ICommandHandler<DeleteUserCommand>
     {
+        #region Dependencies
         private readonly IUserRepository _userRepository;
+        #endregion
 
+        #region Constructor
         public DeleteUserCommandHandler(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }
+        #endregion
 
+        #region Handle Method
         public async Task Handle(DeleteUserCommand request, CancellationToken cancellationToken)
         {
             // Ngăn không cho admin tự xóa chính mình
@@ -37,6 +42,7 @@ namespace PGB.Auth.Application.Commands.Handlers
 
             // Không cần gọi _userRepository.DeleteAsync()
             await _userRepository.SaveChangesAsync(cancellationToken);
-        }
+        } 
+        #endregion
     }
 }

@@ -6,12 +6,17 @@ namespace PGB.Todo.Infrastructure.Persistence
 {
     public class TodoDbContext : BaseDbContext
     {
+        #region Constructor
         public TodoDbContext(DbContextOptions<TodoDbContext> options) : base(options)
         {
         }
+        #endregion
 
+        #region DbSets
         public DbSet<TodoItem> TodoItems { get; set; }
+        #endregion
 
+        #region Model Configuration
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -21,6 +26,7 @@ namespace PGB.Todo.Infrastructure.Persistence
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
                 entity.HasIndex(e => e.UserId);
             });
-        }
+        } 
+        #endregion
     }
 }

@@ -15,18 +15,21 @@ namespace PGB.Auth.Application.Commands.Handlers
 {
     public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, LoginUserResponse>
     {
+        #region Dependencies
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IUserDomainService _userDomainService;
         private readonly SecuritySettings _securitySettings;
+        #endregion
 
+        #region Constructor
         public LoginUserCommandHandler(
-            IUserRepository userRepository,
-            IPasswordHasher passwordHasher,
-            IJwtTokenService jwtTokenService,
-            IUserDomainService userDomainService,
-            SecuritySettings securitySettings)
+           IUserRepository userRepository,
+           IPasswordHasher passwordHasher,
+           IJwtTokenService jwtTokenService,
+           IUserDomainService userDomainService,
+           SecuritySettings securitySettings)
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
@@ -34,7 +37,9 @@ namespace PGB.Auth.Application.Commands.Handlers
             _userDomainService = userDomainService;
             _securitySettings = securitySettings;
         }
+        #endregion
 
+        #region Handle Method
         public async Task<LoginUserResponse> Handle(LoginUserCommand request, CancellationToken cancellationToken)
         {
             var user = await FindUserByUsernameOrEmail(request.UsernameOrEmail, cancellationToken);
@@ -83,6 +88,7 @@ namespace PGB.Auth.Application.Commands.Handlers
                 user = await _userRepository.GetByEmailAsync(usernameOrEmail, cancellationToken);
             }
             return user;
-        }
+        } 
+        #endregion
     }
 }

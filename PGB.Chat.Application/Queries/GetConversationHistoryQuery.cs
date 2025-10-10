@@ -7,6 +7,8 @@ namespace PGB.Chat.Application.Queries
 {
     public class GetConversationHistoryQuery : BaseQuery<List<ChatMessageDto>>
     {
-        public Guid ConversationId { get; set; }
+        #region Properties
+        public Guid ConversationId { get; set; } 
+        #endregion
     }
 }

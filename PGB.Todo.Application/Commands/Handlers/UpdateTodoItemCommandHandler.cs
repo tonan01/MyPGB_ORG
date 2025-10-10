@@ -9,13 +9,18 @@ namespace PGB.Todo.Application.Commands.Handlers
 {
     public class UpdateTodoItemCommandHandler : ICommandHandler<UpdateTodoItemCommand>
     {
+        #region Fields
         private readonly ITodoRepository _todoRepository;
+        #endregion
 
+        #region     
         public UpdateTodoItemCommandHandler(ITodoRepository todoRepository)
         {
             _todoRepository = todoRepository;
         }
+        #endregion
 
+        #region Methods
         public async Task Handle(UpdateTodoItemCommand request, CancellationToken cancellationToken)
         {
             var todoItem = await _todoRepository.GetByIdAsync(request.Id);
@@ -45,6 +50,7 @@ namespace PGB.Todo.Application.Commands.Handlers
 
             _todoRepository.Update(todoItem);
             await _todoRepository.SaveChangesAsync(cancellationToken);
-        }
+        } 
+        #endregion
     }
 }

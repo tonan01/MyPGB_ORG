@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace PGB.BuildingBlocks.WebApi.Common.Models
 {
+    #region Success Response Model
     public class ApiResponse<T>
     {
         public bool Success { get; set; }
@@ -10,8 +11,10 @@ namespace PGB.BuildingBlocks.WebApi.Common.Models
         public string Message { get; set; } = "Operation completed successfully";
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public string CorrelationId { get; set; } = string.Empty;
-    }
+    } 
+    #endregion
 
+    #region Error Response Models
     public class ApiErrorResponse
     {
         public bool Success { get; set; } = false;
@@ -33,7 +36,8 @@ namespace PGB.BuildingBlocks.WebApi.Common.Models
     {
         public string Field { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
-    }
+    } 
+    #endregion
 }
 
 
