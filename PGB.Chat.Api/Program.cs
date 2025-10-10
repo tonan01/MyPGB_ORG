@@ -8,6 +8,10 @@ using PGB.Chat.Infrastructure.Persistence;
 using PGB.Chat.Infrastructure.Repositories;
 using PGB.Chat.Infrastructure.Services;
 using System.Reflection;
+// THÊM USING CHO SERVICE MỚI
+using PGB.Chat.Api.Services;
+using PGB.BuildingBlocks.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +46,12 @@ builder.Services.AddAuthentication(options =>
 }).AddJwtBearer();
 builder.Services.AddAuthorization();
 
+// --- BẮT ĐẦU: Đăng ký ICurrentUserService ---
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<CurrentUserService>();
+builder.Services.AddScoped<ICurrentUserService>(sp => sp.GetRequiredService<CurrentUserService>());
+// --- KẾT THÚC: Đăng ký ICurrentUserService ---
+
 // Register Application services
 builder.Services.AddApplicationServices(Assembly.Load("PGB.Chat.Application"));
 
@@ -73,6 +83,25 @@ if (app.Environment.IsDevelopment())
         }
     });
 }
+
+// --- BẮT ĐẦU: Code tự động Apply Migrations (Giải quyết lỗi 42P01) ---
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var context = services.GetRequiredService<ChatDbContext>();
+        logger.LogInformation("Applying database migrations for ChatDbContext...");
+        await context.Database.MigrateAsync();
+        logger.LogInformation("ChatDbContext migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while applying migrations for ChatDbContext.");
+    }
+}
+// --- KẾT THÚC: Code tự động Apply Migrations ---
 
 app.UseWebApiCommon();
 app.UseAuthentication();
