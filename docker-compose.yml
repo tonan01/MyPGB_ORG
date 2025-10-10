@@ -60,6 +60,7 @@ services:
   # II. DỊCH VỤ APIs VÀ GATEWAY
   # ====================================================================
   pgb.auth.api:
+    image: tonan01/pgb-auth-api:latest
     build:
       context: .
       dockerfile: PGB.Auth.Api/Dockerfile
@@ -75,6 +76,7 @@ services:
         condition: service_healthy
 
   pgb.todo.api:
+    image: tonan01/pgb-todo-api:latest
     build:
       context: .
       dockerfile: PGB.Todo.Api/Dockerfile
@@ -89,6 +91,7 @@ services:
         condition: service_healthy
 
   pgb.chat.api:
+    image: tonan01/pgb-chat-api:latest
     build:
       context: .
       dockerfile: PGB.Chat.Api/Dockerfile
@@ -104,11 +107,12 @@ services:
         condition: service_healthy
 
   pgb.apigateway:
+    image: tonan01/pgb-apigateway:latest
     build:
       context: .
       dockerfile: PGB.ApiGateway/Dockerfile
     ports:
-      - "7000:8080"
+      - "7000:8080" # API GATEWAY MÁY HOST
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
@@ -121,14 +125,15 @@ services:
       - pgb.chat.api
 
   # ====================================================================
-  # III. DỊCH VỤ FRONTEND (REACT/VITE) 
+  # III. DỊCH VỤ FRONTEND
   # ====================================================================
   pgb.frontend:
+    image: tonan01/pgb-frontend:latest
     build:
       context: ../../frontend
-      dockerfile: Dockerfile # Tên file Dockerfile trong thư mục Frontend
+      dockerfile: Dockerfile
     ports:
-      - "5173:80" # Ánh xạ cổng 80 (Nginx) sang cổng 5173
+      - "5173:80" # TRUY CẬP FRONTEND TẠI http://localhost:5173
     depends_on:
       - pgb.apigateway
 
