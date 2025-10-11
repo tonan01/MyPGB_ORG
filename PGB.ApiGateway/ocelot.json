@@ -8,8 +8,9 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "pgb.auth.api",
-          "Port": 8080
+          // Chạy Local: Thay thế pgb.auth.api:8080 bằng localhost:5001 (port http mặc định của Auth.Api)
+          "Host": "localhost",
+          "Port": 5001
         }
       ],
       "Priority": 1
@@ -21,8 +22,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "pgb.auth.api",
-          "Port": 8080
+          "Host": "localhost",
+          "Port": 5001
         }
       ],
       "Priority": 1
@@ -34,8 +35,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "pgb.auth.api",
-          "Port": 8080
+          "Host": "localhost",
+          "Port": 5001
         }
       ],
       "Priority": 1
@@ -49,8 +50,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "pgb.auth.api",
-          "Port": 8080
+          "Host": "localhost",
+          "Port": 5001
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -67,8 +68,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "pgb.auth.api",
-          "Port": 8080
+          "Host": "localhost",
+          "Port": 5001
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -87,8 +88,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "pgb.auth.api",
-          "Port": 8080
+          "Host": "localhost",
+          "Port": 5001
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -105,8 +106,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "pgb.auth.api",
-          "Port": 8080
+          "Host": "localhost",
+          "Port": 5001
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -125,8 +126,9 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "pgb.todo.api",
-          "Port": 8080
+          // Chạy Local: Thay thế pgb.todo.api:8080 bằng localhost:5002 (port http mặc định của Todo.Api)
+          "Host": "localhost",
+          "Port": 5002
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -142,8 +144,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "pgb.todo.api",
-          "Port": 8080
+          "Host": "localhost",
+          "Port": 5002
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -161,8 +163,9 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "pgb.chat.api",
-          "Port": 8080
+          // Chạy Local: Thay thế pgb.chat.api:8080 bằng localhost:5003 (port http mặc định của Chat.Api)
+          "Host": "localhost",
+          "Port": 5003
         }
       ],
       "AuthenticationOptions": { "AuthenticationProviderKey": "JwtBearer" },
@@ -173,6 +176,7 @@
     }
   ],
   "GlobalConfiguration": {
+    // Port mặc định của ApiGateway khi chạy local là 7000 (HTTPS)
     "BaseUrl": "https://localhost:7000",
     "RequestIdKey": "X-Correlation-Id"
   }

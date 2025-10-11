@@ -65,7 +65,7 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBeh
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
 builder.Services.AddDbContext<TodoDbContext>(options =>
-    options.UseNpgsql(conn, sql => sql.MigrationsAssembly("PGB.Todo.Infrastructure")));
+    options.UseSqlServer(conn, sql => sql.MigrationsAssembly("PGB.Todo.Infrastructure")));
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<TodoDbContext>());
 
 

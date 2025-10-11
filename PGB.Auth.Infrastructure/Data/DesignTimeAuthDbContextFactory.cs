@@ -33,7 +33,7 @@ namespace PGB.Auth.Infrastructure.Data
                 throw new InvalidDataException($"Could not find a connection string named 'DefaultConnection' in appsettings.{environment}.json");
             }
 
-            optionsBuilder.UseNpgsql(connectionString, sql =>
+            optionsBuilder.UseSqlServer(connectionString, sql =>
             {
                 sql.MigrationsAssembly(typeof(AuthDbContext).Assembly.FullName);
             });

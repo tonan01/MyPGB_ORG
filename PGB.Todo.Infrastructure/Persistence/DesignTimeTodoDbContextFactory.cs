@@ -31,7 +31,7 @@ namespace PGB.Todo.Infrastructure.Persistence
                 throw new InvalidDataException($"Could not find a connection string named 'DefaultConnection' in appsettings.{environment}.json");
             }
 
-            builder.UseNpgsql(connectionString, sql =>
+            builder.UseSqlServer(connectionString, sql =>
             {
                 sql.MigrationsAssembly(typeof(TodoDbContext).Assembly.FullName);
             });

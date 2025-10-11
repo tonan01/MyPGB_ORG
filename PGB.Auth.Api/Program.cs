@@ -75,7 +75,7 @@ builder.Services.AddSingleton(SecuritySettings.Default());
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
 builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseNpgsql(conn, sql => sql.MigrationsAssembly("PGB.Auth.Infrastructure")));
+    options.UseSqlServer(conn, sql => sql.MigrationsAssembly("PGB.Auth.Infrastructure")));
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AuthDbContext>());
 
 
