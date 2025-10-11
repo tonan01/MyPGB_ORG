@@ -59,14 +59,12 @@ namespace PGB.Auth.Infrastructure.Repositories
             return Task.CompletedTask;
         }
 
-        // === BẮT ĐẦU SỬA LỖI ===
         public Task DeleteAsync(User user, CancellationToken cancellationToken = default)
         {
-            // THAY VÌ XÓA CỨNG, THỰC HIỆN XÓA MỀM
+            // Thực hiện xóa mềm thay vì xóa cứng
             user.MarkAsDeleted(string.Empty);
             return Task.CompletedTask;
         }
-        // === KẾT THÚC SỬA LỖI ===
 
         public async Task<Role?> GetRoleByNameAsync(string roleName, CancellationToken cancellationToken = default)
         {

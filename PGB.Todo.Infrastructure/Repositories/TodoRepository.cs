@@ -39,21 +39,16 @@ namespace PGB.Todo.Infrastructure.Repositories
             await _context.TodoItems.AddAsync(todoItem);
         }
 
-        // === BẮT ĐẦU SỬA LỖI ===
         public void Update(TodoItem todoItem)
         {
-            // KHÔNG CẦN LÀM GÌ CẢ.
-            // EF Core's Change Tracker sẽ tự động phát hiện các thay đổi 
-            // khi các thuộc tính của 'todoItem' được sửa trong Command Handler.
+            // Không cần làm gì ở đây. EF Core tự động theo dõi thay đổi.
         }
 
         public void Delete(TodoItem todoItem)
         {
-            // THAY VÌ XÓA CỨNG, CHÚNG TA THỰC HIỆN XÓA MỀM
-            // BaseDbContext sẽ tự điền 'DeletedBy' và 'DeletedAt'
+            // Thực hiện xóa mềm
             todoItem.MarkAsDeleted(string.Empty);
         }
-        // === KẾT THÚC SỬA LỖI ===
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {

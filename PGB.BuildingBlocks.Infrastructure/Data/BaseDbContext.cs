@@ -54,13 +54,13 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
                 }
 
                 // === BẮT ĐẦU SỬA LỖI ===
-                // Sử dụng entry.Property để đảm bảo EF Core theo dõi được sự thay đổi
+                // Logic này đảm bảo EF Core nhận biết được sự thay đổi để tạo lệnh UPDATE.
                 if (entry.State == EntityState.Modified)
                 {
                     entry.Property(nameof(IAuditable.UpdatedAt)).CurrentValue = now;
                     entry.Property(nameof(IAuditable.UpdatedBy)).CurrentValue = currentUser;
 
-                    // Nếu thực thể đang được soft delete, cập nhật các trường liên quan
+                    // Xử lý riêng cho việc xóa mềm
                     if (entry.Entity is ISoftDelete softDeleteEntity && softDeleteEntity.IsDeleted && entry.Property(nameof(ISoftDelete.IsDeleted)).IsModified)
                     {
                         entry.Property(nameof(ISoftDelete.DeletedAt)).CurrentValue = now;
