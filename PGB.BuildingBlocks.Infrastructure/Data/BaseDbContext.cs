@@ -21,7 +21,7 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
         {
             _mediator = mediator;
             _currentUserService = currentUserService;
-        } 
+        }
         #endregion
 
         #region SaveChanges Overrides
@@ -31,7 +31,7 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
             var result = await base.SaveChangesAsync(cancellationToken);
             await DispatchDomainEvents();
             return result;
-        } 
+        }
         #endregion
 
         #region Model Configuration
@@ -39,23 +39,35 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
         private void UpdateAuditableEntities()
         {
             var entries = ChangeTracker.Entries()
-                .Where(e => e.Entity is BaseEntity<Guid>)
+                .Where(e => e.Entity is IAuditable && (e.State == EntityState.Added || e.State == EntityState.Modified))
                 .ToList();
+
+            var currentUser = _currentUserService?.GetCurrentUsername() ?? "system";
+            var now = DateTime.UtcNow;
 
             foreach (var entry in entries)
             {
-                var entity = (BaseEntity<Guid>)entry.Entity;
-                switch (entry.State)
+                if (entry.State == EntityState.Added)
                 {
-                    case EntityState.Added:
-                        // use EF property accessors to set protected setters
-                        entry.Property(nameof(BaseEntity<Guid>.CreatedAt)).CurrentValue = DateTime.UtcNow;
-                        entry.Property(nameof(BaseEntity<Guid>.CreatedBy)).CurrentValue = _currentUserService?.GetCurrentUsername() ?? "system";
-                        break;
-                    case EntityState.Modified:
-                        entity.MarkAsUpdated(_currentUserService?.GetCurrentUsername() ?? "system");
-                        break;
+                    entry.Property(nameof(IAuditable.CreatedAt)).CurrentValue = now;
+                    entry.Property(nameof(IAuditable.CreatedBy)).CurrentValue = currentUser;
                 }
+
+                // === BẮT ĐẦU SỬA LỖI ===
+                // Sử dụng entry.Property để đảm bảo EF Core theo dõi được sự thay đổi
+                if (entry.State == EntityState.Modified)
+                {
+                    entry.Property(nameof(IAuditable.UpdatedAt)).CurrentValue = now;
+                    entry.Property(nameof(IAuditable.UpdatedBy)).CurrentValue = currentUser;
+
+                    // Nếu thực thể đang được soft delete, cập nhật các trường liên quan
+                    if (entry.Entity is ISoftDelete softDeleteEntity && softDeleteEntity.IsDeleted && entry.Property(nameof(ISoftDelete.IsDeleted)).IsModified)
+                    {
+                        entry.Property(nameof(ISoftDelete.DeletedAt)).CurrentValue = now;
+                        entry.Property(nameof(ISoftDelete.DeletedBy)).CurrentValue = currentUser;
+                    }
+                }
+                // === KẾT THÚC SỬA LỖI ===
             }
         }
 
@@ -87,11 +99,11 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
             #region Soft Delete Query Filter
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
-                if (typeof(BaseEntity<Guid>).IsAssignableFrom(entityType.ClrType))
+                if (typeof(ISoftDelete).IsAssignableFrom(entityType.ClrType))
                 {
                     var parameter = Expression.Parameter(entityType.ClrType, "e");
                     var body = Expression.Equal(
-                        Expression.Property(parameter, nameof(BaseEntity<Guid>.IsDeleted)),
+                        Expression.Property(parameter, nameof(ISoftDelete.IsDeleted)),
                         Expression.Constant(false));
                     var lambda = Expression.Lambda(body, parameter);
 
@@ -103,20 +115,31 @@ namespace PGB.BuildingBlocks.Infrastructure.Data
             #region Audit Fields Configuration
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
+                if (typeof(IAuditable).IsAssignableFrom(entityType.ClrType))
+                {
+                    modelBuilder.Entity(entityType.ClrType, b =>
+                    {
+                        b.Property(nameof(IAuditable.CreatedBy)).HasMaxLength(100);
+                        b.Property(nameof(IAuditable.UpdatedBy)).HasMaxLength(100);
+                    });
+                }
+                if (typeof(ISoftDelete).IsAssignableFrom(entityType.ClrType))
+                {
+                    modelBuilder.Entity(entityType.ClrType, b =>
+                    {
+                        b.Property(nameof(ISoftDelete.DeletedBy)).HasMaxLength(100);
+                    });
+                }
                 if (typeof(BaseEntity<Guid>).IsAssignableFrom(entityType.ClrType))
                 {
                     modelBuilder.Entity(entityType.ClrType, b =>
                     {
-                        b.Property(nameof(BaseEntity<Guid>.CreatedBy)).HasMaxLength(100);
-                        b.Property(nameof(BaseEntity<Guid>.UpdatedBy)).HasMaxLength(100);
-                        b.Property(nameof(BaseEntity<Guid>.DeletedBy)).HasMaxLength(100);
-                        // Configure RowVersion concurrency token if present
                         b.Property("RowVersion").IsRowVersion();
                     });
                 }
             }
             #endregion
-        } 
+        }
         #endregion
     }
 }

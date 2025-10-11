@@ -67,8 +67,13 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBeh
 // Đăng ký DbContext
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
-builder.Services.AddDbContext<ChatDbContext>(options =>
-    options.UseSqlServer(conn, sql => sql.MigrationsAssembly("PGB.Chat.Infrastructure")));
+
+builder.Services.AddDbContext<ChatDbContext>((sp, options) =>
+{
+    options.UseSqlServer(conn, sql => sql.MigrationsAssembly("PGB.Chat.Infrastructure"));
+});
+// =============================
+
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<ChatDbContext>());
 
 

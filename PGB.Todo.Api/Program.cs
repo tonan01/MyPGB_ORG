@@ -64,8 +64,13 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBeh
 // Đăng ký DbContext
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
-builder.Services.AddDbContext<TodoDbContext>(options =>
-    options.UseSqlServer(conn, sql => sql.MigrationsAssembly("PGB.Todo.Infrastructure")));
+
+builder.Services.AddDbContext<TodoDbContext>((sp, options) =>
+{
+    options.UseSqlServer(conn, sql => sql.MigrationsAssembly("PGB.Todo.Infrastructure"));
+});
+// =============================
+
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<TodoDbContext>());
 
 

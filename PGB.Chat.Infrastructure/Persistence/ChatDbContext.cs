@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using PGB.BuildingBlocks.Application.Behaviors;
+using PGB.BuildingBlocks.Domain.Interfaces;
 using PGB.BuildingBlocks.Infrastructure.Data;
 using PGB.Chat.Domain.Entities;
 
@@ -9,6 +11,13 @@ namespace PGB.Chat.Infrastructure.Persistence
     {
         #region Constructor
         public ChatDbContext(DbContextOptions<ChatDbContext> options) : base(options) { }
+        public ChatDbContext(
+            DbContextOptions<ChatDbContext> options,
+            IMediator mediator,
+            ICurrentUserService currentUserService)
+            : base(options, mediator, currentUserService)
+        {
+        }
         #endregion
 
         #region DbSets
@@ -36,7 +45,7 @@ namespace PGB.Chat.Infrastructure.Persistence
                 entity.HasKey(m => m.Id);
                 entity.Property(m => m.Content).IsRequired();
             });
-        } 
+        }
         #endregion
     }
 }

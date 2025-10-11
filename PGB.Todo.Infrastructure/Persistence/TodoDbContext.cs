@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using PGB.BuildingBlocks.Application.Behaviors;
+using PGB.BuildingBlocks.Domain.Interfaces;
 using PGB.BuildingBlocks.Infrastructure.Data;
 using PGB.Todo.Domain.Entities;
 
@@ -9,6 +11,14 @@ namespace PGB.Todo.Infrastructure.Persistence
     {
         #region Constructor
         public TodoDbContext(DbContextOptions<TodoDbContext> options) : base(options)
+        {
+        }
+
+        public TodoDbContext(
+            DbContextOptions<TodoDbContext> options,
+            IMediator mediator,
+            ICurrentUserService currentUserService)
+            : base(options, mediator, currentUserService)
         {
         }
         #endregion
@@ -27,7 +37,7 @@ namespace PGB.Todo.Infrastructure.Persistence
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
                 entity.HasIndex(e => e.UserId);
             });
-        } 
+        }
         #endregion
     }
 }
