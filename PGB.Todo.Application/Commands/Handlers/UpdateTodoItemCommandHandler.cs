@@ -9,18 +9,13 @@ namespace PGB.Todo.Application.Commands.Handlers
 {
     public class UpdateTodoItemCommandHandler : ICommandHandler<UpdateTodoItemCommand>
     {
-        #region Fields
         private readonly ITodoRepository _todoRepository;
-        #endregion
 
-        #region     
         public UpdateTodoItemCommandHandler(ITodoRepository todoRepository)
         {
             _todoRepository = todoRepository;
         }
-        #endregion
 
-        #region Methods
         public async Task Handle(UpdateTodoItemCommand request, CancellationToken cancellationToken)
         {
             var todoItem = await _todoRepository.GetByIdAsync(request.Id);
@@ -30,26 +25,23 @@ namespace PGB.Todo.Application.Commands.Handlers
                 throw new NotFoundException("TodoItem", request.Id);
             }
 
-            // Rất quan trọng: Kiểm tra xem người dùng có phải là chủ sở hữu của công việc này không
             if (todoItem.UserId != request.UserId)
             {
                 throw new AuthorizationException("You are not authorized to update this item.");
             }
 
-            // Cập nhật thông tin
-            todoItem.Update(request.Title, request.Description, request.DueDate, request.Priority, "system");
+            todoItem.Update(request.Title, request.Description, request.DueDate, request.Priority);
 
             if (request.IsCompleted)
             {
-                todoItem.Complete("system");
+                todoItem.Complete();
             }
             else
             {
-                todoItem.Uncomplete("system");
+                todoItem.Uncomplete();
             }
 
             _todoRepository.Update(todoItem);
-        } 
-        #endregion
+        }
     }
 }

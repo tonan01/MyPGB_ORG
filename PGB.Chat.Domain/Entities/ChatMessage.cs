@@ -19,14 +19,13 @@ namespace PGB.Chat.Domain.Entities
         #region Constructor
         protected ChatMessage() { }
 
-        public static ChatMessage Create(Guid conversationId, ChatMessageRole role, string content, string createdBy)
+        public static ChatMessage Create(Guid conversationId, ChatMessageRole role, string content)
         {
             return new ChatMessage
             {
                 ConversationId = conversationId,
                 Role = role,
                 Content = content,
-                CreatedBy = createdBy
             };
         } 
         #endregion

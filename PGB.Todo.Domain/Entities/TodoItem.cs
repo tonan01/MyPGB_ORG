@@ -17,14 +17,14 @@ namespace PGB.Todo.Domain.Entities
         public bool IsCompleted { get; private set; } = false;
         public DateTime? DueDate { get; private set; }
         public Priority Priority { get; private set; } = Priority.Medium;
-        public Guid UserId { get; private set; } // Reference to user from Auth service 
+        public Guid UserId { get; private set; }
         #endregion
 
         #region Constructor
         protected TodoItem() { }
 
         public static TodoItem Create(string title, string description, Guid userId,
-            string createdBy, DateTime? dueDate = null, Priority priority = Priority.Medium)
+            DateTime? dueDate = null, Priority priority = Priority.Medium)
         {
             var todoItem = new TodoItem
             {
@@ -32,11 +32,9 @@ namespace PGB.Todo.Domain.Entities
                 Description = description,
                 UserId = userId,
                 DueDate = dueDate,
-                Priority = priority,
-                CreatedBy = createdBy
+                Priority = priority
             };
 
-            // Add domain event
             todoItem.AddDomainEvent(new TodoItemCreatedEvent(todoItem.Id, title, userId));
 
             return todoItem;
@@ -44,29 +42,24 @@ namespace PGB.Todo.Domain.Entities
         #endregion
 
         #region Methods
-        public void Update(string title, string description, DateTime? dueDate, Priority priority, string updatedBy)
+        public void Update(string title, string description, DateTime? dueDate, Priority priority)
         {
             Title = title;
             Description = description;
             DueDate = dueDate;
             Priority = priority;
-            MarkAsUpdated(updatedBy);
         }
 
-        public void Complete(string updatedBy)
+        public void Complete()
         {
             IsCompleted = true;
-            MarkAsUpdated(updatedBy);
-
-            // Add domain event
             AddDomainEvent(new TodoItemCompletedEvent(Id, Title, UserId));
         }
 
-        public void Uncomplete(string updatedBy)
+        public void Uncomplete()
         {
             IsCompleted = false;
-            MarkAsUpdated(updatedBy);
-        } 
+        }
         #endregion
     }
 }

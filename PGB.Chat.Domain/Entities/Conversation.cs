@@ -19,13 +19,12 @@ namespace PGB.Chat.Domain.Entities
         #region Constructor
         protected Conversation() { }
 
-        public static Conversation Start(Guid userId, string title, string createdBy)
+        public static Conversation Start(Guid userId, string title)
         {
             return new Conversation
             {
                 UserId = userId,
                 Title = title,
-                CreatedBy = createdBy
             };
         }
         #endregion
@@ -36,11 +35,10 @@ namespace PGB.Chat.Domain.Entities
             Messages.Add(message);
         }
 
-        public void ChangeTitle(string newTitle, string updatedBy)
+        public void ChangeTitle(string newTitle)
         {
             Title = newTitle;
-            MarkAsUpdated(updatedBy);
-        } 
+        }
         #endregion
     }
 }

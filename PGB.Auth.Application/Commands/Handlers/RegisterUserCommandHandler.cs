@@ -15,14 +15,11 @@ namespace PGB.Auth.Application.Commands.Handlers
 {
     public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, RegisterUserResponse>
     {
-        #region Dependencies
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IUserDomainService _userDomainService;
         private readonly SecuritySettings _securitySettings;
-        #endregion
 
-        #region Constructor
         public RegisterUserCommandHandler(
           IUserRepository userRepository,
           IPasswordHasher passwordHasher,
@@ -34,35 +31,27 @@ namespace PGB.Auth.Application.Commands.Handlers
             _userDomainService = userDomainService;
             _securitySettings = securitySettings;
         }
-        #endregion
 
-        #region Handle Method
         public async Task<RegisterUserResponse> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
-            // 1. Validate input
             await ValidateInput(request, cancellationToken);
 
-            // 2. Create Value Objects
             var username = Username.Create(request.Username);
             var email = Email.Create(request.Email);
             var fullName = FullName.Create(request.FirstName, request.LastName);
             var hashedPassword = HashedPassword.Create(request.Password, _passwordHasher);
 
-            // 3. Create User Aggregate
-            var user = User.Register(username, email, fullName, hashedPassword, "system");
+            var user = User.Register(username, email, fullName, hashedPassword);
 
-            // 4. Assign default role
             var defaultRole = await _userRepository.GetRoleByNameAsync(AppRoles.User, cancellationToken);
             if (defaultRole == null)
             {
                 throw new InvalidOperationException($"Default role '{AppRoles.User}' not found in the database. Please seed the roles.");
             }
-            user.AddRole(defaultRole, "system");
+            user.AddRole(defaultRole);
 
-            // 5. Save to repository
             await _userRepository.AddAsync(user, cancellationToken);
 
-            // 6. Return response
             return new RegisterUserResponse
             {
                 UserId = user.Id,
@@ -87,7 +76,6 @@ namespace PGB.Auth.Application.Commands.Handlers
 
             if (!_userDomainService.IsPasswordStrong(request.Password))
                 throw new ValidationException("Mật khẩu không đủ mạnh");
-        } 
-        #endregion
+        }
     }
 }

@@ -22,47 +22,44 @@ namespace PGB.Auth.Domain.Entities
         #region Constructors
         protected RefreshToken() { }
 
-        private RefreshToken(Guid userId, string token, DateTime expiresAt, string createdBy)
+        private RefreshToken(Guid userId, string token, DateTime expiresAt)
         {
             UserId = userId;
             Token = token;
             ExpiresAt = expiresAt;
-            CreatedBy = createdBy;
         }
         #endregion
 
         #region Methods
-        public static RefreshToken Create(Guid userId, string token, DateTime expiresAt, string createdBy)
+        public static RefreshToken Create(Guid userId, string token, DateTime expiresAt)
         {
             if (string.IsNullOrWhiteSpace(token))
                 throw new DomainException("Token không được để trống");
             if (expiresAt <= DateTime.UtcNow)
                 throw new DomainException("Token phải có thời gian hết hạn trong tương lai");
-            return new RefreshToken(userId, token, expiresAt, createdBy);
+            return new RefreshToken(userId, token, expiresAt);
         }
 
-        public void Use(string updatedBy)
+        public void Use()
         {
             if (!IsValid)
                 throw new DomainException("Token không hợp lệ");
             IsUsed = true;
-            MarkAsUpdated(updatedBy);
         }
 
-        public void Revoke(string revokedBy, string reason)
+        public void Revoke(string reason)
         {
             if (IsRevoked) return;
             IsRevoked = true;
             RevokedAt = DateTime.UtcNow;
-            RevokedBy = revokedBy;
             RevokeReason = reason;
-            MarkAsUpdated(revokedBy);
+            // RevokedBy sẽ được set tự động bởi BaseDbContext thông qua UpdatedBy
         }
         #endregion
 
         #region Status Properties
         public bool IsExpired => ExpiresAt <= DateTime.UtcNow;
-        public bool IsValid => !IsUsed && !IsRevoked && !IsExpired && !IsDeleted; 
+        public bool IsValid => !IsUsed && !IsRevoked && !IsExpired && !IsDeleted;
         #endregion
     }
 }

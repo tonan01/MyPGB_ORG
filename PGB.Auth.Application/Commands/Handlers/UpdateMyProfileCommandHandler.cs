@@ -9,18 +9,13 @@ namespace PGB.Auth.Application.Commands.Handlers
 {
     public class UpdateMyProfileCommandHandler : ICommandHandler<UpdateMyProfileCommand>
     {
-        #region Dependencies
         private readonly IUserRepository _userRepository;
-        #endregion
 
-        #region Constructor
         public UpdateMyProfileCommandHandler(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }
-        #endregion
 
-        #region Handle Method
         public async Task Handle(UpdateMyProfileCommand request, CancellationToken cancellationToken)
         {
             var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
@@ -32,10 +27,7 @@ namespace PGB.Auth.Application.Commands.Handlers
 
             var newFullName = FullName.Create(request.FirstName, request.LastName);
 
-            // Gọi phương thức domain để cập nhật profile
-            user.UpdateProfile(newFullName, "user"); // "user" cho biết hành động này do chính người dùng thực hiện
-
-        } 
-        #endregion
+            user.UpdateProfile(newFullName);
+        }
     }
 }

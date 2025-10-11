@@ -15,15 +15,12 @@ namespace PGB.Auth.Application.Commands.Handlers
 {
     public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, LoginUserResponse>
     {
-        #region Dependencies
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IUserDomainService _userDomainService;
         private readonly SecuritySettings _securitySettings;
-        #endregion
 
-        #region Constructor
         public LoginUserCommandHandler(
            IUserRepository userRepository,
            IPasswordHasher passwordHasher,
@@ -37,9 +34,7 @@ namespace PGB.Auth.Application.Commands.Handlers
             _userDomainService = userDomainService;
             _securitySettings = securitySettings;
         }
-        #endregion
 
-        #region Handle Method
         public async Task<LoginUserResponse> Handle(LoginUserCommand request, CancellationToken cancellationToken)
         {
             var user = await FindUserByUsernameOrEmail(request.UsernameOrEmail, cancellationToken);
@@ -51,16 +46,16 @@ namespace PGB.Auth.Application.Commands.Handlers
 
             if (!user.VerifyPassword(request.Password, _passwordHasher))
             {
-                user.RecordFailedLogin(_securitySettings, "system");
+                user.RecordFailedLogin(_securitySettings);
                 throw new AuthenticationException("Thông tin đăng nhập không hợp lệ");
             }
 
-            user.Login(request.IpAddress ?? "Unknown", request.UserAgent ?? "Unknown", "system");
+            user.Login(request.IpAddress ?? "Unknown", request.UserAgent ?? "Unknown");
             var accessToken = _jwtTokenService.GenerateAccessToken(user);
             var refreshTokenValue = _userDomainService.GenerateRefreshToken();
             var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(_securitySettings.RefreshTokenLifetimeDays);
 
-            var refreshToken = user.AddRefreshToken(refreshTokenValue, refreshTokenExpiresAt, "system");
+            var refreshToken = user.AddRefreshToken(refreshTokenValue, refreshTokenExpiresAt);
             _userRepository.AddRefreshToken(refreshToken);
 
             return new LoginUserResponse
@@ -85,7 +80,6 @@ namespace PGB.Auth.Application.Commands.Handlers
                 user = await _userRepository.GetByEmailAsync(usernameOrEmail, cancellationToken);
             }
             return user;
-        } 
-        #endregion
+        }
     }
 }

@@ -32,14 +32,12 @@ namespace PGB.Auth.Domain.Entities
         #region Constructors
         protected User() { }
 
-        private User(Username username, Email email, FullName fullName,
-                    HashedPassword passwordHash, string createdBy)
+        private User(Username username, Email email, FullName fullName, HashedPassword passwordHash)
         {
             Username = username;
             Email = email;
             FullName = fullName;
             PasswordHash = passwordHash;
-            CreatedBy = createdBy;
         }
         #endregion
 
@@ -48,10 +46,9 @@ namespace PGB.Auth.Domain.Entities
             Username username,
             Email email,
             FullName fullName,
-            HashedPassword passwordHash,
-            string createdBy = "system")
+            HashedPassword passwordHash)
         {
-            var user = new User(username, email, fullName, passwordHash, createdBy);
+            var user = new User(username, email, fullName, passwordHash);
 
             user.RaiseDomainEvent(new UserRegisteredEvent(
                 user.Id, username.Value, email.Value, fullName.DisplayName));
@@ -61,7 +58,7 @@ namespace PGB.Auth.Domain.Entities
         #endregion
 
         #region Authentication Methods
-        public void Login(string ipAddress, string userAgent, string updatedBy)
+        public void Login(string ipAddress, string userAgent)
         {
             if (IsLocked)
                 throw new DomainException($"Tài khoản bị khóa đến {LockedUntil:dd/MM/yyyy HH:mm}");
@@ -73,12 +70,11 @@ namespace PGB.Auth.Domain.Entities
             LockedUntil = null;
             LastLoginAt = DateTime.UtcNow;
             LastLoginIpAddress = ipAddress;
-            MarkAsUpdated(updatedBy);
 
             RaiseDomainEvent(new UserLoggedInEvent(Id, Username.Value, ipAddress, userAgent));
         }
 
-        public void RecordFailedLogin(SecuritySettings securitySettings, string updatedBy)
+        public void RecordFailedLogin(SecuritySettings securitySettings)
         {
             FailedLoginAttempts++;
 
@@ -86,8 +82,6 @@ namespace PGB.Auth.Domain.Entities
             {
                 LockedUntil = DateTime.UtcNow.AddMinutes(securitySettings.LockoutDurationMinutes);
             }
-
-            MarkAsUpdated(updatedBy);
         }
 
         public bool VerifyPassword(string plainPassword, IPasswordHasher passwordHasher)
@@ -97,7 +91,7 @@ namespace PGB.Auth.Domain.Entities
         #endregion
 
         #region Role Management
-        public void AddRole(Role role, string createdBy)
+        public void AddRole(Role role)
         {
             if (!UserRoles.Any(ur => ur.RoleId == role.Id))
             {
@@ -110,95 +104,85 @@ namespace PGB.Auth.Domain.Entities
         public void ChangePassword(
             string currentPassword,
             HashedPassword newPasswordHash,
-            IPasswordHasher passwordHasher,
-            string updatedBy)
+            IPasswordHasher passwordHasher)
         {
             if (!VerifyPassword(currentPassword, passwordHasher))
                 throw new DomainException("Mật khẩu hiện tại không đúng");
 
             PasswordHash = newPasswordHash;
-            MarkAsUpdated(updatedBy);
 
-            RevokeAllRefreshTokens(updatedBy, "Password changed");
+            RevokeAllRefreshTokens("Password changed");
             RaiseDomainEvent(new UserPasswordChangedEvent(Id, Username.Value, false));
         }
 
-        public void ResetPassword(HashedPassword newPasswordHash, string updatedBy)
+        public void ResetPassword(HashedPassword newPasswordHash)
         {
             PasswordHash = newPasswordHash;
             FailedLoginAttempts = 0;
             LockedUntil = null;
-            MarkAsUpdated(updatedBy);
 
-            RevokeAllRefreshTokens(updatedBy, "Password reset");
+            RevokeAllRefreshTokens("Password reset");
             RaiseDomainEvent(new UserPasswordChangedEvent(Id, Username.Value, true));
         }
         #endregion
 
         #region Profile Management
-        public void UpdateProfile(FullName fullName, string updatedBy)
+        public void UpdateProfile(FullName fullName)
         {
             FullName = fullName;
-            MarkAsUpdated(updatedBy);
         }
 
-        public void ChangeEmail(Email newEmail, string updatedBy)
+        public void ChangeEmail(Email newEmail)
         {
             if (Email.Equals(newEmail))
                 return;
 
             Email = newEmail;
             IsEmailVerified = false;
-            MarkAsUpdated(updatedBy);
         }
 
-        public void VerifyEmail(string updatedBy)
+        public void VerifyEmail()
         {
             IsEmailVerified = true;
-            MarkAsUpdated(updatedBy);
         }
         #endregion
 
         #region Account Management
-        public void Deactivate(string reason, string deactivatedBy)
+        public void Deactivate(string reason)
         {
             IsActive = false;
-            MarkAsUpdated(deactivatedBy);
 
-            RevokeAllRefreshTokens(deactivatedBy, "User deactivated");
-            RaiseDomainEvent(new UserDeactivatedEvent(Id, Username.Value, reason, deactivatedBy));
+            RevokeAllRefreshTokens("User deactivated");
+            RaiseDomainEvent(new UserDeactivatedEvent(Id, Username.Value, reason, UpdatedBy ?? "system"));
         }
 
-        public void Activate(string updatedBy)
+        public void Activate()
         {
             IsActive = true;
             FailedLoginAttempts = 0;
             LockedUntil = null;
-            MarkAsUpdated(updatedBy);
         }
 
-        public void Unlock(string updatedBy)
+        public void Unlock()
         {
             FailedLoginAttempts = 0;
             LockedUntil = null;
-            MarkAsUpdated(updatedBy);
         }
         #endregion
 
         #region Token Management
-        public RefreshToken AddRefreshToken(string tokenValue, DateTime expiresAt, string createdBy)
+        public RefreshToken AddRefreshToken(string tokenValue, DateTime expiresAt)
         {
             CleanupExpiredTokens();
-            var refreshToken = RefreshToken.Create(this.Id, tokenValue, expiresAt, createdBy);
-            // Không thêm vào collection ở đây để logic được xử lý ở tầng Repository
+            var refreshToken = RefreshToken.Create(this.Id, tokenValue, expiresAt);
             return refreshToken;
         }
 
-        public void RevokeAllRefreshTokens(string revokedBy, string reason = "Manual revoke")
+        public void RevokeAllRefreshTokens(string reason = "Manual revoke")
         {
             foreach (var token in RefreshTokens.Where(t => !t.IsRevoked))
             {
-                token.Revoke(revokedBy, reason);
+                token.Revoke(reason);
             }
         }
 

@@ -12,14 +12,11 @@ namespace PGB.Auth.Application.Commands.Handlers
 {
     public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, RefreshTokenResponse>
     {
-        #region Dependencies
         private readonly IUserRepository _userRepository;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IUserDomainService _userDomainService;
         private readonly SecuritySettings _securitySettings;
-        #endregion
 
-        #region Constructor
         public RefreshTokenCommandHandler(
            IUserRepository userRepository,
            IJwtTokenService jwtTokenService,
@@ -31,9 +28,7 @@ namespace PGB.Auth.Application.Commands.Handlers
             _userDomainService = userDomainService;
             _securitySettings = securitySettings;
         }
-        #endregion
 
-        #region Handle Method
         public async Task<RefreshTokenResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
             var oldRefreshToken = await _userRepository.GetRefreshTokenAsync(request.RefreshToken, cancellationToken);
@@ -50,16 +45,14 @@ namespace PGB.Auth.Application.Commands.Handlers
                 throw new AuthenticationException("Tài khoản của bạn đã bị khóa hoặc không hoạt động.");
             }
 
-            //Tạo Access Token mới
             var newAccessToken = _jwtTokenService.GenerateAccessToken(user);
 
-            //Tạo Refresh Token mới và thu hồi token cũ
             var newRefreshTokenValue = _userDomainService.GenerateRefreshToken();
             var newRefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_securitySettings.RefreshTokenLifetimeDays);
 
-            oldRefreshToken.Use("system");
+            oldRefreshToken.Use();
 
-            var newRefreshToken = user.AddRefreshToken(newRefreshTokenValue, newRefreshTokenExpiresAt, "system");
+            var newRefreshToken = user.AddRefreshToken(newRefreshTokenValue, newRefreshTokenExpiresAt);
             _userRepository.AddRefreshToken(newRefreshToken);
 
             return new RefreshTokenResponse
@@ -69,7 +62,6 @@ namespace PGB.Auth.Application.Commands.Handlers
                 AccessTokenExpiresAt = newAccessToken.ExpiresAt,
                 RefreshTokenExpiresAt = newRefreshToken.ExpiresAt
             };
-        } 
-        #endregion
+        }
     }
 }
