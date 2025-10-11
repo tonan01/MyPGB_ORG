@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using PGB.BuildingBlocks.Application.Behaviors;
 using PGB.BuildingBlocks.Infrastructure.Data;
 using PGB.Chat.Domain.Entities;
 
 namespace PGB.Chat.Infrastructure.Persistence
 {
-    public class ChatDbContext : BaseDbContext
+    public class ChatDbContext : BaseDbContext, IUnitOfWork
     {
         #region Constructor
         public ChatDbContext(DbContextOptions<ChatDbContext> options) : base(options) { }

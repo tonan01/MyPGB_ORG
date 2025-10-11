@@ -62,8 +62,6 @@ namespace PGB.Auth.Application.Commands.Handlers
             var newRefreshToken = user.AddRefreshToken(newRefreshTokenValue, newRefreshTokenExpiresAt, "system");
             _userRepository.AddRefreshToken(newRefreshToken);
 
-            await _userRepository.SaveChangesAsync(cancellationToken);
-
             return new RefreshTokenResponse
             {
                 AccessToken = newAccessToken.Token,

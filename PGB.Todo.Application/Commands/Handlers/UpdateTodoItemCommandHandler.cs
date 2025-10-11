@@ -49,7 +49,6 @@ namespace PGB.Todo.Application.Commands.Handlers
             }
 
             _todoRepository.Update(todoItem);
-            await _todoRepository.SaveChangesAsync(cancellationToken);
         } 
         #endregion
     }

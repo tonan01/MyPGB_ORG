@@ -61,7 +61,6 @@ namespace PGB.Auth.Application.Commands.Handlers
 
             // 5. Save to repository
             await _userRepository.AddAsync(user, cancellationToken);
-            await _userRepository.SaveChangesAsync(cancellationToken);
 
             // 6. Return response
             return new RegisterUserResponse

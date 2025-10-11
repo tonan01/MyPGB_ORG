@@ -1,22 +1,24 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
-using PGB.BuildingBlocks.Application.Extensions;
+using PGB.BuildingBlocks.Application.Behaviors;
+using PGB.BuildingBlocks.Domain.Interfaces;
 using PGB.BuildingBlocks.WebApi.Common.Extensions;
+using PGB.BuildingBlocks.WebApi.Common.Filters;
+using PGB.Todo.Api.Services;
 using PGB.Todo.Application.Interfaces;
 using PGB.Todo.Infrastructure.Persistence;
 using PGB.Todo.Infrastructure.Repositories;
 using System.Reflection;
-// THÊM USING CHO SERVICE MỚI
-using PGB.Todo.Api.Services;
-using PGB.BuildingBlocks.Domain.Interfaces;
-using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// === NÂNG CẤP: Đăng ký GlobalExceptionFilter ===
+builder.Services.AddControllers(options => options.Filters.Add<GlobalExceptionFilter>());
+
 // Add services
 builder.AddWebApiCommon();
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 // API Versioning
@@ -43,23 +45,31 @@ builder.Services.AddAuthentication(options =>
 }).AddJwtBearer();
 builder.Services.AddAuthorization();
 
-// --- BẮT ĐẦU: Đăng ký ICurrentUserService ---
+// Đăng ký ICurrentUserService
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CurrentUserService>();
 builder.Services.AddScoped<ICurrentUserService>(sp => sp.GetRequiredService<CurrentUserService>());
-// --- KẾT THÚC: Đăng ký ICurrentUserService ---
 
-// Register Application services
-builder.Services.AddApplicationServices(Assembly.Load("PGB.Todo.Application"));
+// MediatR và AutoMapper
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Load("PGB.Todo.Application")));
+builder.Services.AddAutoMapper(Assembly.Load("PGB.Todo.Application"));
 
-// Register DbContext
+
+// === NÂNG CẤP: Đăng ký các Pipeline Behavior, bao gồm cả UnitOfWorkBehavior ===
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBehavior<,>));
+
+// === NÂNG CẤP: Đăng ký DbContext theo 2 cách cho DI ===
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
+// 1. Đăng ký cụ thể cho các service trong project
 builder.Services.AddDbContext<TodoDbContext>(options =>
-    options.UseNpgsql(conn, sql =>
-    {
-        sql.MigrationsAssembly("PGB.Todo.Infrastructure");
-    }));
+    options.UseNpgsql(conn, sql => sql.MigrationsAssembly("PGB.Todo.Infrastructure")));
+// 2. Đăng ký chung cho UnitOfWorkBehavior
+builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<TodoDbContext>());
+
 
 // Register Repository
 builder.Services.AddScoped<ITodoRepository, TodoRepository>();
@@ -80,7 +90,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// --- BẮT ĐẦU: Code tự động Apply Migrations (Giải quyết lỗi 42P01) ---
+// Code tự động Apply Migrations
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -97,7 +107,6 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while applying migrations for TodoDbContext.");
     }
 }
-// --- KẾT THÚC: Code tự động Apply Migrations ---
 
 // Add middlewares
 app.UseWebApiCommon();

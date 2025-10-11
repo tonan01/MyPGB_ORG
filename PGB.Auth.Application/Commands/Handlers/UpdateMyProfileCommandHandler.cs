@@ -35,8 +35,6 @@ namespace PGB.Auth.Application.Commands.Handlers
             // Gọi phương thức domain để cập nhật profile
             user.UpdateProfile(newFullName, "user"); // "user" cho biết hành động này do chính người dùng thực hiện
 
-            // Không cần gọi _userRepository.UpdateAsync vì DbContext sẽ tự động theo dõi thay đổi
-            await _userRepository.SaveChangesAsync(cancellationToken);
         } 
         #endregion
     }

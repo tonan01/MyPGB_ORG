@@ -1,22 +1,29 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
 using PGB.Auth.Application.Repositories;
 using PGB.Auth.Application.Services;
 using PGB.Auth.Domain.ValueObjects;
+using PGB.Auth.Infrastructure;
 using PGB.Auth.Infrastructure.Data;
 using PGB.Auth.Infrastructure.Repositories;
 using PGB.Auth.Infrastructure.Services;
-using PGB.BuildingBlocks.Application.Extensions;
+using PGB.BuildingBlocks.Application.Behaviors;
+using PGB.BuildingBlocks.Domain.Interfaces;
 using PGB.BuildingBlocks.WebApi.Common.Extensions;
+using PGB.BuildingBlocks.WebApi.Common.Filters;
 using System.Reflection;
-using PGB.Auth.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// === NÂNG CẤP: Đăng ký GlobalExceptionFilter & Thêm cấu hình IOptions ===
+builder.Services.AddControllers(options => options.Filters.Add<GlobalExceptionFilter>());
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+
+
 // Add services
 builder.AddWebApiCommon();
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 // API Versioning
@@ -41,28 +48,38 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer();
-
 builder.Services.AddAuthorization();
 
 // Register services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<PGB.Auth.Api.Services.CurrentUserService>();
-builder.Services.AddScoped<PGB.BuildingBlocks.Domain.Interfaces.ICurrentUserService>(sp => sp.GetRequiredService<PGB.Auth.Api.Services.CurrentUserService>());
-builder.Services.AddApplicationServices(Assembly.Load("PGB.Auth.Application"));
+builder.Services.AddScoped<ICurrentUserService>(sp => sp.GetRequiredService<PGB.Auth.Api.Services.CurrentUserService>());
+
+// MediatR và AutoMapper
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Load("PGB.Auth.Application")));
+builder.Services.AddAutoMapper(Assembly.Load("PGB.Auth.Application"));
+
+// === NÂNG CẤP: Đăng ký các Pipeline Behavior, bao gồm cả UnitOfWorkBehavior ===
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBehavior<,>));
+
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserDomainService, UserDomainService>();
 builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddSingleton(SecuritySettings.Default());
 
-// Register DbContext
+// === NÂNG CẤP: Đăng ký DbContext theo 2 cách cho DI ===
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
-builder.Services.AddDbContextPool<AuthDbContext>(options =>
-    options.UseNpgsql(conn, sql =>
-    {
-        sql.MigrationsAssembly("PGB.Auth.Infrastructure");
-    }));
+// 1. Đăng ký cụ thể cho các service trong project
+builder.Services.AddDbContext<AuthDbContext>(options =>
+    options.UseNpgsql(conn, sql => sql.MigrationsAssembly("PGB.Auth.Infrastructure")));
+// 2. Đăng ký chung cho UnitOfWorkBehavior
+builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AuthDbContext>());
+
 
 var app = builder.Build();
 
@@ -94,7 +111,7 @@ using (var scope = app.Services.CreateScope())
     {
         logger.LogError(ex, "An error occurred while initializing the database.");
     }
-} 
+}
 #endregion
 
 app.UseWebApiCommon();

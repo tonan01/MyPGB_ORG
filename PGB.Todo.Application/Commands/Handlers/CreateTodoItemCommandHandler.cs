@@ -35,7 +35,6 @@ namespace PGB.Todo.Application.Commands.Handlers
                 request.Priority);
 
             await _todoRepository.AddAsync(todoItem);
-            await _todoRepository.SaveChangesAsync(cancellationToken);
 
             return _mapper.Map<TodoItemDto>(todoItem);
         } 

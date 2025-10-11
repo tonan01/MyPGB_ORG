@@ -39,9 +39,6 @@ namespace PGB.Auth.Application.Commands.Handlers
             // Thay vì xóa cứng, chúng ta sẽ gọi phương thức soft-delete (nếu có)
             // Trong BaseEntity đã có sẵn MarkAsDeleted
             userToDelete.MarkAsDeleted($"admin_{request.UserId}");
-
-            // Không cần gọi _userRepository.DeleteAsync()
-            await _userRepository.SaveChangesAsync(cancellationToken);
         } 
         #endregion
     }

@@ -1,23 +1,26 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
-using PGB.BuildingBlocks.Application.Extensions;
+using PGB.BuildingBlocks.Application.Behaviors;
+using PGB.BuildingBlocks.Domain.Interfaces;
 using PGB.BuildingBlocks.WebApi.Common.Extensions;
+using PGB.BuildingBlocks.WebApi.Common.Filters;
+using PGB.Chat.Api.Services;
 using PGB.Chat.Application.Interfaces;
 using PGB.Chat.Infrastructure.Persistence;
 using PGB.Chat.Infrastructure.Repositories;
 using PGB.Chat.Infrastructure.Services;
 using System.Reflection;
-// THÊM USING CHO SERVICE MỚI
-using PGB.Chat.Api.Services;
-using PGB.BuildingBlocks.Domain.Interfaces;
-using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// === NÂNG CẤP: Đăng ký GlobalExceptionFilter & Thêm cấu hình IOptions ===
+builder.Services.AddControllers(options => options.Filters.Add<GlobalExceptionFilter>());
+builder.Services.Configure<OpenAiSettings>(builder.Configuration.GetSection("OpenAI"));
+
 // Add services
 builder.AddWebApiCommon();
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 // API Versioning
@@ -35,7 +38,6 @@ builder.Services.AddVersionedApiExplorer(options =>
 });
 
 builder.Services.AddSwaggerGen();
-
 builder.Services.AddHttpClient();
 
 // Authentication & Authorization
@@ -46,23 +48,31 @@ builder.Services.AddAuthentication(options =>
 }).AddJwtBearer();
 builder.Services.AddAuthorization();
 
-// --- BẮT ĐẦU: Đăng ký ICurrentUserService ---
+// Đăng ký ICurrentUserService
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CurrentUserService>();
 builder.Services.AddScoped<ICurrentUserService>(sp => sp.GetRequiredService<CurrentUserService>());
-// --- KẾT THÚC: Đăng ký ICurrentUserService ---
 
-// Register Application services
-builder.Services.AddApplicationServices(Assembly.Load("PGB.Chat.Application"));
+// MediatR và AutoMapper
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Load("PGB.Chat.Application")));
+builder.Services.AddAutoMapper(Assembly.Load("PGB.Chat.Application"));
 
-// Register DbContext
+// === NÂNG CẤP: Đăng ký các Pipeline Behavior, bao gồm cả UnitOfWorkBehavior ===
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBehavior<,>));
+
+
+// === NÂNG CẤP: Đăng ký DbContext theo 2 cách cho DI ===
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
+// 1. Đăng ký cụ thể cho các service trong project
 builder.Services.AddDbContext<ChatDbContext>(options =>
-    options.UseNpgsql(conn, sql =>
-    {
-        sql.MigrationsAssembly("PGB.Chat.Infrastructure");
-    }));
+    options.UseNpgsql(conn, sql => sql.MigrationsAssembly("PGB.Chat.Infrastructure")));
+// 2. Đăng ký chung cho UnitOfWorkBehavior
+builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<ChatDbContext>());
+
 
 // Register Infrastructure services
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
@@ -84,7 +94,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// --- BẮT ĐẦU: Code tự động Apply Migrations (Giải quyết lỗi 42P01) ---
+// Code tự động Apply Migrations
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -101,7 +111,6 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while applying migrations for ChatDbContext.");
     }
 }
-// --- KẾT THÚC: Code tự động Apply Migrations ---
 
 app.UseWebApiCommon();
 app.UseAuthentication();

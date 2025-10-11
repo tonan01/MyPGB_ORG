@@ -40,9 +40,6 @@ namespace PGB.Auth.Application.Commands.Handlers
 
             // 4. Revoke the token
             refreshToken.Revoke("system", "User logout");
-
-            // 5. Save changes
-            await _userRepository.SaveChangesAsync(cancellationToken);
         }
         #endregion
     }

@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using PGB.BuildingBlocks.Application.Behaviors;
 using PGB.BuildingBlocks.Infrastructure.Data;
 using PGB.Todo.Domain.Entities;
 
 namespace PGB.Todo.Infrastructure.Persistence
 {
-    public class TodoDbContext : BaseDbContext
+    public class TodoDbContext : BaseDbContext, IUnitOfWork
     {
         #region Constructor
         public TodoDbContext(DbContextOptions<TodoDbContext> options) : base(options)

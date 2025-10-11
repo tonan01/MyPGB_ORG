@@ -3,7 +3,6 @@ using PGB.BuildingBlocks.Application.Queries;
 
 namespace PGB.Auth.Application.Queries
 {
-    #region Query Class
     public class GetUserByIdQuery : BaseQuery<UserDto>
     {
         #region Properties
@@ -17,5 +16,4 @@ namespace PGB.Auth.Application.Queries
         }
         #endregion
     }
-    #endregion
 }

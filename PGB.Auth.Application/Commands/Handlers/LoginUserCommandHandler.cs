@@ -52,7 +52,6 @@ namespace PGB.Auth.Application.Commands.Handlers
             if (!user.VerifyPassword(request.Password, _passwordHasher))
             {
                 user.RecordFailedLogin(_securitySettings, "system");
-                await _userRepository.SaveChangesAsync(cancellationToken);
                 throw new AuthenticationException("Thông tin đăng nhập không hợp lệ");
             }
 
@@ -63,8 +62,6 @@ namespace PGB.Auth.Application.Commands.Handlers
 
             var refreshToken = user.AddRefreshToken(refreshTokenValue, refreshTokenExpiresAt, "system");
             _userRepository.AddRefreshToken(refreshToken);
-
-            await _userRepository.SaveChangesAsync(cancellationToken);
 
             return new LoginUserResponse
             {

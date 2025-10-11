@@ -60,10 +60,7 @@ namespace PGB.Chat.Application.Commands.Handlers
             var assistantMessage = ChatMessage.Create(conversation.Id, ChatMessageRole.Assistant, assistantResponseContent, "system");
             conversation.AddMessage(assistantMessage);
 
-            // 5. Lưu tất cả thay đổi vào database
-            await _chatRepository.SaveChangesAsync(cancellationToken);
-
-            // 6. Trả về tin nhắn của AI cho client
+            // 5. Trả về tin nhắn của AI cho client
             return _mapper.Map<ChatMessageDto>(assistantMessage);
         } 
         #endregion

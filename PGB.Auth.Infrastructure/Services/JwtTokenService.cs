@@ -1,45 +1,50 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using PGB.Auth.Application.Services;
 using PGB.Auth.Domain.Entities;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 
 namespace PGB.Auth.Infrastructure.Services
 {
     public class JwtTokenService : IJwtTokenService
     {
         #region Dependencies
-        private readonly IConfiguration _configuration;
+        private readonly JwtSettings _jwtSettings;
         private readonly ILogger<JwtTokenService> _logger;
-        private readonly string _secretKey;
-        private readonly string _issuer;
-        private readonly string _audience;
-        private readonly int _expirationMinutes;
         #endregion
 
-        #region Constructor
-        public JwtTokenService(IConfiguration configuration, ILogger<JwtTokenService> logger)
+        #region Constructor (Đã nâng cấp)
+        // Sử dụng IOptions<JwtSettings> thay vì IConfiguration
+        public JwtTokenService(IOptions<JwtSettings> jwtSettings, ILogger<JwtTokenService> logger)
         {
-            _configuration = configuration;
+            // Lấy đối tượng cấu hình từ IOptions
+            _jwtSettings = jwtSettings.Value;
             _logger = logger;
-            _secretKey = configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
-            _issuer = configuration["JwtSettings:Issuer"] ?? "PGB_ORG";
-            _audience = configuration["JwtSettings:Audience"] ?? "PGB_ORG_Users";
-            _expirationMinutes = int.Parse(configuration["JwtSettings:ExpirationInMinutes"] ?? "60");
+
+            // Kiểm tra cấu hình ngay từ đầu để tránh lỗi runtime
+            if (string.IsNullOrEmpty(_jwtSettings.SecretKey))
+            {
+                throw new InvalidOperationException("JWT SecretKey not configured in appsettings.json");
+            }
+            if (_jwtSettings.ExpirationInMinutes <= 0)
+            {
+                _jwtSettings.ExpirationInMinutes = 60; // Gán giá trị mặc định nếu chưa cấu hình
+            }
         }
         #endregion
 
-        #region Generate Token
+        #region Generate Token (Đã nâng cấp)
         public JwtToken GenerateAccessToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_secretKey);
-            var expiresAt = DateTime.UtcNow.AddMinutes(_expirationMinutes);
+            var key = Encoding.ASCII.GetBytes(_jwtSettings.SecretKey);
+            var expiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes);
 
             var claims = new List<Claim>
             {
@@ -64,8 +69,8 @@ namespace PGB.Auth.Infrastructure.Services
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = expiresAt,
-                Issuer = _issuer,
-                Audience = _audience,
+                Issuer = _jwtSettings.Issuer,
+                Audience = _jwtSettings.Audience,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
@@ -78,24 +83,24 @@ namespace PGB.Auth.Infrastructure.Services
                 ExpiresAt = expiresAt,
                 TokenType = "Bearer"
             };
-        } 
+        }
         #endregion
 
-        #region Implementation
+        #region Validate Token
         public ClaimsPrincipal? ValidateToken(string token)
         {
             try
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes(_secretKey);
+                var key = Encoding.ASCII.GetBytes(_jwtSettings.SecretKey);
                 var validationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ValidateIssuer = true,
-                    ValidIssuer = _issuer,
+                    ValidIssuer = _jwtSettings.Issuer,
                     ValidateAudience = true,
-                    ValidAudience = _audience,
+                    ValidAudience = _jwtSettings.Audience,
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
                 };
@@ -105,7 +110,7 @@ namespace PGB.Auth.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "ValidateToken failed");
+                _logger.LogWarning(ex, "Token validation failed.");
                 return null;
             }
         }

@@ -30,9 +30,6 @@ namespace PGB.Auth.Application.Commands.Handlers
 
             // 2. Revoke all refresh tokens
             user.RevokeAllRefreshTokens("system", "User logout from all devices");
-
-            // 3. Save changes
-            await _userRepository.SaveChangesAsync(cancellationToken);
         }
         #endregion
     }

@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using PGB.Auth.Domain.Entities;
+using PGB.BuildingBlocks.Application.Behaviors;
 using PGB.BuildingBlocks.Infrastructure.Data;
-using MediatR;
 
 namespace PGB.Auth.Infrastructure.Data
 {
-    public class AuthDbContext : BaseDbContext
+    public class AuthDbContext : BaseDbContext, IUnitOfWork
     {
         #region Constructor
         public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options)
