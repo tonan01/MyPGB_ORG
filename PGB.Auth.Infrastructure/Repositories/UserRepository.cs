@@ -14,18 +14,13 @@ namespace PGB.Auth.Infrastructure.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        #region Dependencies
-        private readonly AuthDbContext _context; 
-        #endregion
+        private readonly AuthDbContext _context;
 
-        #region Constructor
         public UserRepository(AuthDbContext context)
         {
             _context = context;
-        } 
-        #endregion
+        }
 
-        #region Basic CRUD Operations
         public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _context.Users
@@ -64,22 +59,21 @@ namespace PGB.Auth.Infrastructure.Repositories
             return Task.CompletedTask;
         }
 
+        // === BẮT ĐẦU SỬA LỖI ===
         public Task DeleteAsync(User user, CancellationToken cancellationToken = default)
         {
-            _context.Users.Remove(user);
+            // THAY VÌ XÓA CỨNG, THỰC HIỆN XÓA MỀM
+            user.MarkAsDeleted(string.Empty);
             return Task.CompletedTask;
         }
-        #endregion
+        // === KẾT THÚC SỬA LỖI ===
 
-        #region Role Operations
         public async Task<Role?> GetRoleByNameAsync(string roleName, CancellationToken cancellationToken = default)
         {
             return await _context.Roles
                 .FirstOrDefaultAsync(r => r.Name == roleName, cancellationToken);
         }
-        #endregion
 
-        #region Query Operations
         public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             return await _context.Users
@@ -100,9 +94,7 @@ namespace PGB.Auth.Infrastructure.Repositories
 
             return new PagedResult<User>(users, totalCount, query.Page, query.PageSize);
         }
-        #endregion
 
-        #region Refresh Token Operations
         public async Task<RefreshToken?> GetRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
         {
             return await _context.RefreshTokens
@@ -116,9 +108,7 @@ namespace PGB.Auth.Infrastructure.Repositories
         {
             _context.RefreshTokens.Add(refreshToken);
         }
-        #endregion
 
-        #region Existence Checks
         public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
             return await _context.Users
@@ -130,9 +120,7 @@ namespace PGB.Auth.Infrastructure.Repositories
             return await _context.Users
                 .AnyAsync(u => u.Email.Value == email.ToLowerInvariant(), cancellationToken);
         }
-        #endregion
 
-        #region Unit of Work
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             try
@@ -144,6 +132,5 @@ namespace PGB.Auth.Infrastructure.Repositories
                 throw new PGB.BuildingBlocks.Application.Exceptions.ConcurrencyException("Concurrency conflict detected while saving changes.", ex);
             }
         }
-        #endregion
     }
 }

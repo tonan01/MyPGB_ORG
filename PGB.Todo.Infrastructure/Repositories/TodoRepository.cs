@@ -14,18 +14,13 @@ namespace PGB.Todo.Infrastructure.Repositories
 {
     public class TodoRepository : ITodoRepository
     {
-        #region Fields
         private readonly TodoDbContext _context;
-        #endregion
 
-        #region Constructor
         public TodoRepository(TodoDbContext context)
         {
             _context = context;
         }
-        #endregion
 
-        #region Methods
         public async Task<TodoItem?> GetByIdAsync(Guid id)
         {
             return await _context.TodoItems.FindAsync(id);
@@ -44,15 +39,21 @@ namespace PGB.Todo.Infrastructure.Repositories
             await _context.TodoItems.AddAsync(todoItem);
         }
 
+        // === BẮT ĐẦU SỬA LỖI ===
         public void Update(TodoItem todoItem)
         {
-            _context.TodoItems.Update(todoItem);
+            // KHÔNG CẦN LÀM GÌ CẢ.
+            // EF Core's Change Tracker sẽ tự động phát hiện các thay đổi 
+            // khi các thuộc tính của 'todoItem' được sửa trong Command Handler.
         }
 
         public void Delete(TodoItem todoItem)
         {
-            _context.TodoItems.Remove(todoItem);
+            // THAY VÌ XÓA CỨNG, CHÚNG TA THỰC HIỆN XÓA MỀM
+            // BaseDbContext sẽ tự điền 'DeletedBy' và 'DeletedAt'
+            todoItem.MarkAsDeleted(string.Empty);
         }
+        // === KẾT THÚC SỬA LỖI ===
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {
@@ -61,7 +62,7 @@ namespace PGB.Todo.Infrastructure.Repositories
 
         public async Task<PagedResult<TodoItem>> GetPagedByUserIdAsync(GetTodoItemsQuery query)
         {
-            query.ValidateAndNormalize(); // Chuẩn hóa page, pageSize
+            query.ValidateAndNormalize();
 
             var queryable = _context.TodoItems
                                     .Where(t => t.UserId == query.UserId)
@@ -75,7 +76,6 @@ namespace PGB.Todo.Infrastructure.Repositories
                                 .ToListAsync();
 
             return new PagedResult<TodoItem>(items, totalCount, query.Page, query.PageSize);
-        } 
-        #endregion
+        }
     }
 }
