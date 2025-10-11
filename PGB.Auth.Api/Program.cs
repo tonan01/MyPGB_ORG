@@ -17,7 +17,7 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// === NÂNG CẤP: Đăng ký GlobalExceptionFilter & Thêm cấu hình IOptions ===
+// Đăng ký GlobalExceptionFilter & Thêm cấu hình IOptions
 builder.Services.AddControllers(options => options.Filters.Add<GlobalExceptionFilter>());
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
@@ -59,7 +59,7 @@ builder.Services.AddScoped<ICurrentUserService>(sp => sp.GetRequiredService<PGB.
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Load("PGB.Auth.Application")));
 builder.Services.AddAutoMapper(Assembly.Load("PGB.Auth.Application"));
 
-// === NÂNG CẤP: Đăng ký các Pipeline Behavior, bao gồm cả UnitOfWorkBehavior ===
+// Đăng ký các Pipeline Behavior
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
@@ -71,13 +71,11 @@ builder.Services.AddScoped<IUserDomainService, UserDomainService>();
 builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddSingleton(SecuritySettings.Default());
 
-// === NÂNG CẤP: Đăng ký DbContext theo 2 cách cho DI ===
+// Đăng ký DbContext
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
-// 1. Đăng ký cụ thể cho các service trong project
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(conn, sql => sql.MigrationsAssembly("PGB.Auth.Infrastructure")));
-// 2. Đăng ký chung cho UnitOfWorkBehavior
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AuthDbContext>());
 
 

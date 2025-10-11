@@ -15,6 +15,10 @@
   <ItemGroup>
     <ProjectReference Include="..\PGB.BuildingBlocks.Application\PGB.BuildingBlocks.Application.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Filters\" />
+  </ItemGroup>
   <!-- Redis package removed; in-memory behaviors used by default -->
 
 </Project>

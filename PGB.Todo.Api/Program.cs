@@ -14,7 +14,7 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// === NÂNG CẤP: Đăng ký GlobalExceptionFilter ===
+// Đăng ký GlobalExceptionFilter
 builder.Services.AddControllers(options => options.Filters.Add<GlobalExceptionFilter>());
 
 // Add services
@@ -55,19 +55,17 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Loa
 builder.Services.AddAutoMapper(Assembly.Load("PGB.Todo.Application"));
 
 
-// === NÂNG CẤP: Đăng ký các Pipeline Behavior, bao gồm cả UnitOfWorkBehavior ===
+// Đăng ký các Pipeline Behavior
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBehavior<,>));
 
-// === NÂNG CẤP: Đăng ký DbContext theo 2 cách cho DI ===
+// Đăng ký DbContext
 var conn = builder.Configuration.GetConnectionString("DefaultConnection")
           ?? throw new InvalidOperationException("DB connection string 'DefaultConnection' not configured");
-// 1. Đăng ký cụ thể cho các service trong project
 builder.Services.AddDbContext<TodoDbContext>(options =>
     options.UseNpgsql(conn, sql => sql.MigrationsAssembly("PGB.Todo.Infrastructure")));
-// 2. Đăng ký chung cho UnitOfWorkBehavior
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<TodoDbContext>());
 
 
