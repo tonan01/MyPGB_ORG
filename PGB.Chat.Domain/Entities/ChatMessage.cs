@@ -30,12 +30,4 @@ namespace PGB.Chat.Domain.Entities
         } 
         #endregion
     }
-
-    #region Enum
-    public enum ChatMessageRole
-    {
-        User,
-        Assistant
-    } 
-    #endregion
 }
