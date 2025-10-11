@@ -1,4 +1,4 @@
-﻿using PGB.Todo.Domain.Events;
+﻿using PGB.Todo.Domain.Enums;
 using System;
 
 namespace PGB.Todo.Application.Dtos

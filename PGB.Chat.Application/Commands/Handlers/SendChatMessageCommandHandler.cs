@@ -4,6 +4,7 @@ using PGB.BuildingBlocks.Application.Exceptions;
 using PGB.Chat.Application.Dtos;
 using PGB.Chat.Application.Interfaces;
 using PGB.Chat.Domain.Entities;
+using PGB.Chat.Domain.Enums;
 using System;
 using System.Linq;
 using System.Threading;

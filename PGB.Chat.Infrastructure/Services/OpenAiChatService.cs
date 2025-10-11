@@ -1,10 +1,15 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options; // THÊM USING NÀY
 using PGB.Chat.Application.Interfaces;
 using PGB.Chat.Domain.Entities;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Collections.Generic;
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using PGB.Chat.Domain.Enums;
 
 namespace PGB.Chat.Infrastructure.Services
 {
@@ -12,28 +17,33 @@ namespace PGB.Chat.Infrastructure.Services
     {
         #region Fields
         private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
-        private readonly string _modelName;
+        private readonly OpenAiSettings _settings;
         private readonly ILogger<OpenAiChatService>? _logger;
         #endregion
 
         #region Constructor
         public OpenAiChatService(
            IHttpClientFactory httpClientFactory,
-           IConfiguration configuration,
+           IOptions<OpenAiSettings> settings,
            ILogger<OpenAiChatService>? logger = null)
         {
             _logger = logger;
             _httpClient = httpClientFactory.CreateClient();
+            _settings = settings.Value; // LẤY CẤU HÌNH TỪ IOPSIONS
 
-            _apiKey = configuration["OpenAI:ApiKey"]
-                ?? throw new InvalidOperationException("OpenAI API Key not configured");
+            if (string.IsNullOrEmpty(_settings.ApiKey))
+            {
+                throw new InvalidOperationException("OpenAI API Key not configured in appsettings.json");
+            }
 
-            _modelName = configuration["OpenAI:ModelName"] ?? "gpt-3.5-turbo";
+            if (string.IsNullOrEmpty(_settings.ModelName))
+            {
+                _settings.ModelName = "gpt-3.5-turbo"; // Gán giá trị mặc định nếu không có
+            }
 
             _httpClient.BaseAddress = new Uri("https://api.openai.com/v1/");
             _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", _apiKey);
+                new AuthenticationHeaderValue("Bearer", _settings.ApiKey);
         }
         #endregion
 
@@ -52,6 +62,7 @@ namespace PGB.Chat.Infrastructure.Services
                 // History
                 foreach (var msg in history)
                 {
+                    // Sử dụng enum ChatMessageRole đã được tách file
                     var role = msg.Role == ChatMessageRole.User ? "user" : "assistant";
                     messages.Add(new { role, content = msg.Content });
                 }
@@ -62,7 +73,7 @@ namespace PGB.Chat.Infrastructure.Services
                 // Request body
                 var requestBody = new
                 {
-                    model = _modelName,
+                    model = _settings.ModelName,
                     messages,
                     temperature = 0.7,
                     max_tokens = 800
@@ -94,7 +105,7 @@ namespace PGB.Chat.Infrastructure.Services
                 _logger?.LogError(ex, "Error calling OpenAI API");
                 throw new Exception($"AI service error: {ex.Message}", ex);
             }
-        } 
+        }
         #endregion
 
         #region Response Models

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PGB.Chat.Domain.Entities
+namespace PGB.Chat.Domain.Enums
 {
     public enum ChatMessageRole
     {

@@ -19,8 +19,7 @@ namespace PGB.Auth.Infrastructure.Services
         private readonly ILogger<JwtTokenService> _logger;
         #endregion
 
-        #region Constructor (Đã nâng cấp)
-        // Sử dụng IOptions<JwtSettings> thay vì IConfiguration
+        #region Constructor
         public JwtTokenService(IOptions<JwtSettings> jwtSettings, ILogger<JwtTokenService> logger)
         {
             // Lấy đối tượng cấu hình từ IOptions
@@ -39,7 +38,7 @@ namespace PGB.Auth.Infrastructure.Services
         }
         #endregion
 
-        #region Generate Token (Đã nâng cấp)
+        #region Generate Token
         public JwtToken GenerateAccessToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

@@ -1,4 +1,5 @@
 ﻿using PGB.BuildingBlocks.Domain.Entities;
+using PGB.Chat.Domain.Enums;
 using System;
 
 namespace PGB.Chat.Domain.Entities

@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using PGB.BuildingBlocks.Application.Commands;
 using PGB.Todo.Application.Dtos;
-using PGB.Todo.Domain.Events;
+using PGB.Todo.Domain.Enums;
 using System;
 
 namespace PGB.Todo.Application.Commands

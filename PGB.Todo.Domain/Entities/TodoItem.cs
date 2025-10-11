@@ -1,5 +1,6 @@
 ﻿using PGB.BuildingBlocks.Domain.Entities;
 using PGB.Todo.Domain.Events;
+using PGB.Todo.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
