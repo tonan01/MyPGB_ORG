@@ -1,4 +1,4 @@
-﻿using PGB.Chat.Domain.Entities;
+﻿using PGB.Chat.Domain.Enums;
 using System;
 
 namespace PGB.Chat.Application.Dtos

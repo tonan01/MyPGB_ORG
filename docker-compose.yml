@@ -1,6 +1,4 @@
-﻿version: '3.8'
-
-services:
+﻿services:
   # ====================================================================
   # I. DỊCH VỤ DATABASE (POSTGRESQL)
   # ====================================================================
@@ -71,6 +69,9 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=db_auth;Port=5432;Username=user;Password=${POSTGRES_PASSWORD};Database=PGB_AuthDb
       JwtSettings__SecretKey: ${JWT_SECRETKEY}
+      # --- PHẦN SỬA LỖI ---
+      JwtSettings__Issuer: PGB_ORG
+      JwtSettings__Audience: PGB_ORG_Users
     depends_on:
       db_auth:
         condition: service_healthy
